@@ -67,7 +67,7 @@ export default function AboutPage() {
             <div className="relative">
               <div className="rounded-2xl overflow-hidden shadow-xl">
                 <Image
-                  src="/placeholder.svg?height=400&width=600"
+                  src="/leaf.jpg?height=400&width=600"
                   alt="CityGates Food Bank Team"
                   width={600}
                   height={400}
@@ -214,7 +214,7 @@ export default function AboutPage() {
           </div>
 
           {/* Our Transformation */}
-          <div className="mb-24 w-full max-w-5xl mx-auto">
+          <div className="mb-24 w-full max-w-5xl mx-auto px-4 md:px-0">
             <div className="text-center mb-12">
               <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
                 Our Journey
@@ -278,7 +278,7 @@ export default function AboutPage() {
               {/* Food Bumper Packages */}
               <Card className="border-blue-100 hover:shadow-lg transition-all">
                 <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
                     <ShoppingBag className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">Food Bumper Packages</h3>
@@ -295,7 +295,7 @@ export default function AboutPage() {
               {/* Personal Savings and Loan Scheme */}
               <Card className="border-green-100 hover:shadow-lg transition-all">
                 <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
                     <Landmark className="h-6 w-6 text-green-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">Personal Savings and Loan Scheme</h3>
@@ -312,7 +312,7 @@ export default function AboutPage() {
               {/* Own Your Own Property */}
               <Card className="border-blue-100 hover:shadow-lg transition-all">
                 <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
                     <Home className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">Own Your Own Property</h3>
@@ -329,7 +329,7 @@ export default function AboutPage() {
               {/* The Store Front */}
               <Card className="border-green-100 hover:shadow-lg transition-all">
                 <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
                     <Store className="h-6 w-6 text-green-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">The Store Front</h3>
@@ -346,7 +346,7 @@ export default function AboutPage() {
               {/* Cooperative Membership */}
               <Card className="border-blue-100 hover:shadow-lg transition-all md:col-span-2 lg:col-span-1">
                 <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">Cooperative Membership</h3>
@@ -365,7 +365,8 @@ export default function AboutPage() {
       </section>
 
       {/* Call to action */}
-      <section className="bg-gradient-to-r from-blue-600 to-green-500 py-16 mt-16">
+      {/* <section className="bg-gradient-to-r from-blue-900 to-green-500 py-16 mt-16"> */}
+      <section className="bg-blue-900 py-16 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">Don't Be Left Behind, Join the Train NOW!</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">

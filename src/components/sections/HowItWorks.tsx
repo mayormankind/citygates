@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function HowItWorksPage() {
   const plans = [
@@ -18,9 +19,9 @@ export default function HowItWorksPage() {
     "Choose your periodic top-up type and value",
     "Select your preferred tenor from the options of boxes available",
     "Indicate the account you want your investment to be paid into at maturity",
-    "Review summary info: principal, tenure, rate, maturity",
-    "Accept terms and conditions",
-    "Get your Certificate of Investment",
+    "A summary information about your investment including principal, tenure, interest rate, expected interest to be accrued at maturity and maturity date.",
+    "Once you are fine with the summary, accept the terms and conditions to start investment.",
+    "You will be issued a Certificate of Investment as evidence of your Investment with us.",
   ];
 
   return (
@@ -33,7 +34,9 @@ export default function HowItWorksPage() {
         <p className="mt-4 text-lg text-gray-600">
           GROW WITH UP TO <span className="font-semibold text-blue-700">12%</span> ON YOUR INVESTMENTS
         </p>
-        <Button className="mt-6">Register Now</Button>
+        <Link href="/auth/register">
+            <Button className="mt-6">Register Now</Button>
+        </Link>
       </section>
 
       {/* Investment Plans Section */}
@@ -43,7 +46,7 @@ export default function HowItWorksPage() {
         </h2>
         <div className="grid md:grid-cols-3 gap-6">
           {plans.map((plan) => (
-            <Card key={plan.name} className="shadow-md border">
+            <Card key={plan.name} className="shadow-md border transition-transform hover:scale-105 hover:shadow-lg">
               <CardHeader>
                 <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
                 <CardDescription>Minimum: {plan.min}</CardDescription>
@@ -58,22 +61,22 @@ export default function HowItWorksPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="max-w-3xl mx-auto my-16 px-4">
+      <section className="max-w-5xl mx-auto my-12 px-4">
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">How It Works</h2>
-        <div className="grid md:grid-cols-2 items-center">
+        <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="">
                 <Image src={'/puzzle.svg'} width={1000} height={1000} alt="People collaborating"/>
             </div>
             <div className="">
-                <ol className="space-y-4">
-                {steps.map((step, index) => (
-                    <li key={index} className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
-                        {index + 1}
-                    </div>
-                    <p className="text-gray-700">{step}</p>
-                    </li>
-                ))}
+                <ol className="space-y-6">
+                    {steps.map((step, index) => (
+                        <li key={index} className="flex items-start gap-4">
+                        <div className="w-8 h-8 flex-shrink-0 mt-1 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
+                            {index + 1}
+                        </div>
+                        <p className="text-gray-700 leading-relaxed max-w-prose">{step}</p>
+                        </li>
+                    ))}
                 </ol>
             </div>
         </div>
@@ -82,7 +85,9 @@ export default function HowItWorksPage() {
       {/* Call to Action */}
       <div className="text-center my-20">
         <h3 className="text-xl font-medium text-gray-800">Ready to Start?</h3>
-        <Button className="mt-4 px-8 py-3 text-base">Click Here to Register</Button>
+        <Button className="mt-4 px-8 py-3 text-base">
+            <Link href={'/auth/register'}>Click Here to Register</Link>
+        </Button>
       </div>
     </div>
   );
