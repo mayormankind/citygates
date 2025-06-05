@@ -42,16 +42,12 @@ export default function Register() {
   useEffect(() => {
     const fetchStates = async () => {
       const data = await fetchData("https://nigerian-states-and-lga.vercel.app/")
-      // const stateNames = data?.map((state: { name: string }) => state.name)
       const state = data;
       setStates(state || [])
     }
 
     fetchStates()
   }, [])
-
-  console.log(states);
-  console.log(selectedState);
 
   return (
     <div className='w-full flex h-full min-h-screen bg-gray-200'>
