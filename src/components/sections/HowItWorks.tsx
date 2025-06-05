@@ -27,8 +27,6 @@ export default function HowItWorksPage() {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      {/* <section className="text-center py-16 bg-gradient-to-r from-blue-50 to-blue-100 px-4"> */}
-    {/* <div className="h-full min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-black"> */}
       <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-black text-center py-16 px-4">
         <h1 className="text-3xl md:text-4xl font-bold text-white">
           Join the CityGates iWorth Investment
