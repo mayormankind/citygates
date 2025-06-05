@@ -12,7 +12,7 @@ export default function Packages() {
         "Designed for the Odogwus who like to do it Big because of their big responsibility",
       price: "₦1100",
       per: "Per day",
-      image: "/product.jpg",
+      image: "/jumbo.jpg",
     },
     {
       label: "Chickito Bumper",
@@ -28,7 +28,7 @@ export default function Packages() {
         "Minimini is packaged to suit your pocket. It is creatively packaged not to hurt your purse.",
       price: "₦1100",
       per: "Per day",
-      image: "/product.jpg",
+      image: "/mini.jpg",
     },
   ];
 
