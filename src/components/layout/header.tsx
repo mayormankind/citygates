@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Header() {
   const pathname = usePathname()
+  console.log(pathname, typeof(pathname));
   const [menuOpen, setMenuOpen] = useState(false)
 
   const navItems = [
@@ -24,10 +25,11 @@ export default function Header() {
     { label: 'FAQs', href: '/faqs' },
     { label: 'Contact', href: '/contacts' },
   ]
+  
+  const hideHeader = pathname === '/auth/register' || pathname === '/auth/signin' ? true : false;
 
   return (
-    <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b shadow-sm relative z-20 bg-black/20 border-white/10">
-    {/* <header className="backdrop-blur-md sticky top-0 border-b shadow-sm z-20 bg-black/30 border-white/10"> */}
+    <header className={`${hideHeader ? 'hidden' : 'block'} bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b shadow-sm relative z-20 bg-black/20 border-white/10`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold text-gray-800">
           CityGates
