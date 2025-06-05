@@ -47,30 +47,27 @@ export default function Packages() {
         {packages.map((pkg) => (
           <Card
             key={pkg.label}
-            className="hover:shadow-xl transition-shadow duration-300 ease-in-out grid md:grid-cols-2"
+            className="hover:shadow-xl transition-shadow duration-300 ease-in-out grid md:grid-cols-2 py-0 gap-0"
           >
             <Image
               src={pkg.image}
               alt={pkg.label}
               width={1000} height={1000}
-              className="w-full h-48 object-cover rounded-t-md"
+              className="w-full h-full object-cover rounded-t-md"
             />
-            <div className="flex flex-col gap-4">
-                <CardHeader className="space-y-2 text-left">
-                    <CardTitle className="text-xl font-semibold text-gray-800">
-                        {pkg.label}
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                        {pkg.description}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="mt-auto pt-2 border-t">
-                <p className="text-lg font-medium text-gray-800">
-                    {pkg.price}
-                    <span className="ml-1 text-sm text-gray-500">{pkg.per}</span>
-                </p>
-                </CardContent>
-
+            <div className="flex flex-col gap-4 p-4">
+              <CardHeader className="space-y-2 text-left">
+                <CardTitle className="text-xl font-semibold text-gray-800">
+                  {pkg.label}
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  {pkg.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="mt-auto pt-2 border-t">
+                <p className="text-lg font-medium text-gray-800">{pkg.price}
+                <span className="ml-1 text-sm text-gray-500">{pkg.per}</span></p>
+              </CardContent>
             </div>
           </Card>
         ))}
