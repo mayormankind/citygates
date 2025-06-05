@@ -40,7 +40,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Investment Plans Section */}
-      <section className="max-w-6xl mx-auto my-16 px-4">
+      {/* <section className="max-w-6xl mx-auto my-16 px-4">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
           Investment Plans
         </h2>
@@ -58,17 +58,17 @@ export default function HowItWorksPage() {
             </Card>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* How It Works Section */}
       <section className="max-w-5xl mx-auto my-12 px-4">
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">How It Works</h2>
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="">
+        <div className="flex gap-8 items-center">
+            <div className="flex-1">
                 <Image src={'/puzzle.svg'} width={1000} height={1000} alt="People collaborating"/>
             </div>
-            <div className="">
-                <ol className="space-y-6">
+            <div className="w-full flex-2">
+                <ol className="grid md:grid-cols-2 space-y-4 space-x-4">
                     {steps.map((step, index) => (
                         <li key={index} className="flex items-start gap-4">
                         <div className="w-8 h-8 flex-shrink-0 mt-1 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
@@ -81,14 +81,6 @@ export default function HowItWorksPage() {
             </div>
         </div>
       </section>
-
-      {/* Call to Action */}
-      <div className="text-center my-20">
-        <h3 className="text-xl font-medium text-gray-800">Ready to Start?</h3>
-        <Button className="mt-4 px-8 py-3 text-base">
-            <Link href={'/auth/register'}>Click Here to Register</Link>
-        </Button>
-      </div>
     </div>
   );
 } 
