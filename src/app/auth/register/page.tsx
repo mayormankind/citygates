@@ -65,7 +65,7 @@ export default function Register() {
               <h2 className='text-2xl font-bold'>CityGates Food Bank</h2>
             </div>
           </div>
-          <div className="w-full flex flex-col space-y-2">
+          <form className="w-full flex flex-col space-y-2">
             <div className="flex gap-4 items-center">
               <h3>+234</h3>
               <Input placeholder='Enter your phone number.' className='shadow-none'/>
@@ -116,7 +116,7 @@ export default function Register() {
             <Textarea placeholder='Street Address' className='shadow-none'/>
             <span className='text-gray-500 text-xs my-4'>After registration, you will be conatcted by one of the team to facilitate your physical onboarding and complete KYC, Kindly wait to be contacted!</span>
             <Button>Continue</Button>
-          </div>
+          </form>
         </section>
       </div>
     </div>

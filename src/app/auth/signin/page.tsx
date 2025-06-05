@@ -27,7 +27,7 @@ export default function Signin() {
                 <TabsTrigger value="signin-as-admin">Admin</TabsTrigger>
               </TabsList>
             </div>
-            <TabsContent value="signin-as-customer" className="w-full">
+            <TabsContent value="signin-as-customer" id='customer' className="w-full">
               <div className="w-full flex flex-col space-y-4">
                 <div className="flex gap-4 items-center">
                   <h3>+234</h3>
@@ -37,7 +37,7 @@ export default function Signin() {
                 <p className='text-center text-sm'>New user? {" "} <span className='text-blue-700'><Link href={'/auth/register'}>Register here.</Link></span></p>
               </div>
             </TabsContent>
-            <TabsContent value="signin-as-admin" className="w-full flex flex-col space-y-4">
+            <TabsContent value="signin-as-admin" id={'admin'} className="w-full flex flex-col space-y-4">
               <Input placeholder='Enter your email'/>
               <Input placeholder='Enter your password'/>
               <Button>Signin</Button>

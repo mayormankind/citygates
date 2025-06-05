@@ -35,7 +35,7 @@ export default function HowItWorksPage() {
           GROW WITH UP TO <span className="font-semibold text-blue-700">12%</span> ON YOUR INVESTMENTS
         </p>
         <Link href="/auth/register">
-            <Button className="mt-6 bg-white text-black p-4">Register Now</Button>
+            <Button className="mt-6 bg-white text-black hover:bg-white/70 hover:text-white hover:scale-105 p-4 animate-pulse-glow transition-all px-8">Register Now</Button>
         </Link>
       </section>
 

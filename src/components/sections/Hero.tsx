@@ -15,7 +15,7 @@ export default function Hero() {
         <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-blue-400/20 rounded-full blur-xl animate-bounce delay-2000"></div>
 
         {/* Grid pattern overlay */}
-        {/* <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 opacity-5">
           <div
             className="h-full w-full"
             style={{
@@ -23,7 +23,7 @@ export default function Hero() {
               backgroundSize: "50px 50px",
             }}
           ></div>
-        </div> */}
+        </div>
       </div>
 
       {/* Main Hero Content */}
