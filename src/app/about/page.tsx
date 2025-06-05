@@ -16,6 +16,13 @@ import {
   ChevronRight,
   ArrowRight,
 } from "lucide-react"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description: "CityGates Food Bank is an independent organization registered with the Corporate Affairs Commission with the intention to promote food security in the country. Our aim is to create a sustainable system that enables every individual to have access to quality food with little or no money despite prevailing economic challenges.",
+  icons:'/globe.svg'
+}
 
 export default function AboutPage() {
   return (

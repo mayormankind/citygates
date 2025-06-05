@@ -6,8 +6,16 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "FAQs",
+  description: "HAve any questions in mind to ask? We are here to help.",
+  icons:'/globe.svg'
+}
 
 const Faqs = () => {
+
 
     const faqs = [
         {

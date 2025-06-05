@@ -3,9 +3,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Facebook, Instagram, Linkedin, MapPin, Phone, X } from 'lucide-react'
+import { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+
+
+export const metadata: Metadata = {
+    title: "Contact Us",
+    description: "Reach out to CityGates today.",
+    icons:'/globe.svg'
+}
 
 export default function Contact() {
   return (
