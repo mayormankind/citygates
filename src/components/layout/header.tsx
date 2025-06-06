@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Menu, X, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 
 export default function Header() {
   const pathname = usePathname()
-  console.log(pathname, typeof(pathname));
   const [menuOpen, setMenuOpen] = useState(false)
 
   const navItems = [
@@ -29,10 +29,11 @@ export default function Header() {
   const hideHeader = pathname === '/auth/register' || pathname === '/auth/signin' ? true : false;
 
   return (
-    <header className={`${hideHeader ? 'hidden' : 'block'} bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b shadow-sm relative z-20 bg-black/20 border-white/10`}>
+    <header className={`${hideHeader ? 'hidden' : 'block'} bg-white/80 backdrop-blur-md sticky top-0 border-b shadow-sm z-20 border-white/10`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-gray-800">
-          CityGates
+        <Link href="/" className="text-2xl flex gap-2 items-center font-bold text-gray-800">
+          <Image src={'/logo.jpeg'} width={1000} height={1000} alt='CityGatesFB logo' className='w-10 h-10'/>
+          <span className='text-transparent bg-clip-text bg-gradient-to-b from-slate-600 via-yellow-700 to-black'>CityGates Food Bank</span>
         </Link>
 
         {/* Desktop Nav */}

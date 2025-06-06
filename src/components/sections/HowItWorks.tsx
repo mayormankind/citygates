@@ -1,86 +1,199 @@
-import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import Link from "next/link";
+"use client"
 
-export default function HowItWorksPage() {
-  const plans = [
-    { name: "CityMax", min: "₦1,000,000", rate: "12%", tenure: "365 Days" },
-    { name: "CityFlex", min: "₦500,000", rate: "10%", tenure: "182 or 365 Days" },
-    { name: "CityCrux", min: "₦50,000", rate: "7%", tenure: "90, 182 or 365 Days" },
-  ];
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import {
+  FileText, Settings, Calculator, CreditCard, TrendingUp,
+  Calendar, Wallet, CheckCircle, Sparkles, ArrowRight, Star,
+} from "lucide-react"
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "../ui/table"
 
-  const steps = [
-    "Pick a CityGatesFB Investment Form",
-    "Fill the form and select Investment Package of your choice",
-    "Name your investment and input amount to invest",
-    "Select method of payment to CityGatesFB",
-    "Choose your periodic top-up type and value",
-    "Select your preferred tenor from the options of boxes available",
-    "Indicate the account you want your investment to be paid into at maturity",
-    "A summary information about your investment including principal, tenure, interest rate, expected interest to be accrued at maturity and maturity date.",
-    "Once you are fine with the summary, accept the terms and conditions to start investment.",
-    "You will be issued a Certificate of Investment as evidence of your Investment with us.",
-  ];
 
-  return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-black text-center py-16 px-4">
-        <h1 className="text-3xl md:text-4xl font-bold text-white">
-          Join the CityGates iWorth Investment
-        </h1>
-        <p className="mt-4 text-lg text-gray-100">
-          GROW WITH UP TO <span className="font-semibold text-blue-700">12%</span> ON YOUR INVESTMENTS
-        </p>
-        <Link href="/auth/register">
-            <Button className="mt-6 bg-white text-black hover:bg-white/70 hover:text-white hover:scale-105 p-4 animate-pulse-glow transition-all px-8">Register Now</Button>
-        </Link>
-      </section>
 
-      {/* Investment Plans Section */}
-      {/* <section className="max-w-6xl mx-auto my-16 px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-          Investment Plans
-        </h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {plans.map((plan) => (
-            <Card key={plan.name} className="shadow-md border transition-transform hover:scale-105 hover:shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
-                <CardDescription>Minimum: {plan.min}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700">Interest Rate: {plan.rate}</p>
-                <p className="text-gray-500">Tenure: {plan.tenure}</p>
-              </CardContent>
-            </Card>
-          ))}
+const investmentPlans = [
+  {
+    name: "CityMax",
+    min: "₦1,000,000",
+    rate: "12%",
+    tenure: "365 Days",
+    popular: false,
+    classes: {
+      bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-600",
+    },
+  },
+  {
+    name: "CityFlex",
+    min: "₦500,000",
+    rate: "10%",
+    tenure: "182 or 365 Days",
+    popular: true,
+    classes: {
+      bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-600",
+    },
+  },
+  {
+    name: "CityCrux",
+    min: "₦50,000",
+    rate: "7%",
+    tenure: "90, 182 or 365 Days",
+    popular: false,
+    classes: {
+      bg: "bg-green-50", border: "border-green-200", text: "text-green-600",
+    },
+  },
+]
+
+const investmentSteps = [
+  { title: "Pick Investment Form", description: "Choose a CityGatesFB Investment Form to get started", icon: FileText },
+  { title: "Select Package", description: "Fill the form and select your preferred Investment Package", icon: Settings },
+  { title: "Set Investment Amount", description: "Name your investment and input the amount you want to invest", icon: Calculator },
+  { title: "Choose Payment Method", description: "Select your preferred method of payment to CityGatesFB", icon: CreditCard },
+  { title: "Configure Top-ups", description: "Choose your periodic top-up type and value for growth", icon: TrendingUp },
+  { title: "Select Tenure", description: "Pick your preferred tenor from the available options", icon: Calendar },
+  { title: "Set Payout Account", description: "Indicate where you want your investment paid at maturity", icon: Wallet },
+  { title: "Review & Confirm", description: "Review summary, accept terms and get your investment certificate", icon: CheckCircle },
+]
+
+export default function HowItWorks() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+  const [visibleItems, setVisibleItems] = useState({ plans: [] as number[], steps: [] as number[] })
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true)
+
+          investmentPlans.forEach((_, i) =>
+            setTimeout(() => setVisibleItems(prev => ({
+              ...prev, plans: [...prev.plans, i]
+            })), i * 150)
+          )
+
+          setTimeout(() => {
+            investmentSteps.forEach((_, i) =>
+              setTimeout(() => setVisibleItems(prev => ({
+                ...prev, steps: [...prev.steps, i]
+              })), i * 100)
+            )
+          }, 800)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    const ref = sectionRef.current
+    if (ref) observer.observe(ref)
+    return () => observer.disconnect()
+  }, [isVisible])
+
+    return (
+    <section ref={sectionRef} className="relative w-full bg-gradient-to-br from-gray-900 via-slate-900 to-black py-24 overflow-hidden">
+      {/* Animated background effects */}
+      <div className="absolute inset-0 overflow-hidden z-0">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-2xl animate-pulse delay-1000"></div>
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.3) 1px, transparent 0)",
+          backgroundSize: "50px 50px"
+        }} />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className={`text-center mb-20 transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+          <div className="inline-flex items-center px-4 py-2 bg-blue-500/10 border border-blue-400/20 rounded-full backdrop-blur-sm mb-6">
+            <Sparkles className="h-4 w-4 text-blue-400 mr-2" />
+            <span className="text-blue-200 text-sm font-medium">CityGates iWorth Investment</span>
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            Join the CityGates <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">iWorth Investment</span>
+          </h1>
+
+          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            GROW WITH UP TO <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">12%</span> ON YOUR INVESTMENTS
+          </p>
+
+          <Link href="/auth/register">
+            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300">
+              Register Now <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
         </div>
-      </section> */}
 
-      {/* How It Works Section */}
-      <section className="max-w-5xl mx-auto my-12 px-4">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">How It Works</h2>
-        <div className="flex gap-8 items-center">
-            <div className="flex-1">
-                <Image src={'/puzzle.svg'} width={1000} height={1000} alt="People collaborating"/>
-            </div>
-            <div className="w-full flex-2">
-                <ol className="grid md:grid-cols-2 space-y-4 space-x-4">
-                    {steps.map((step, index) => (
-                        <li key={index} className="flex items-start gap-4">
-                        <div className="w-8 h-8 flex-shrink-0 mt-1 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
-                            {index + 1}
-                        </div>
-                        <p className="text-gray-700 leading-relaxed max-w-prose">{step}</p>
-                        </li>
-                    ))}
-                </ol>
-            </div>
+        {/* Plans Table */}
+        <div className="mb-24">
+          <div className={`text-center mb-12 transition-all duration-1000 delay-300 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+            <h2 className="text-3xl font-bold text-white mb-4">Choose Your Investment Plan</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Select from our flexible investment packages designed to maximize your returns</p>
+          </div>
+
+          <div className="flex mx-auto max-w-4xl">
+            <Table className="w-full bg-white/5 backdrop-blur-sm border border-white/10 shadow-lg animate-slide-up">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Minimum</TableHead>
+                  <TableHead>Interest</TableHead>
+                  <TableHead>Tenure</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {investmentPlans.map((plan, i) => (
+                  <TableRow
+                    key={plan.name}
+                    className={`transition-all duration-500 transform hover:scale-105 ${plan.classes.bg} ${plan.classes.border} ${
+                      visibleItems.plans.includes(i) ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95"
+                    }`}
+                    style={{ transitionDelay: `${i * 150}ms` }}
+                  >
+                    <TableCell className="font-medium flex flex-col md:flex-row items-center gap-2">
+                      {plan.name}
+                      {plan.popular && (
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white ml-2">
+                          <Star className="h-4 w-4 mr-1" />
+                          Popular
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{plan.min}</TableCell>
+                    <TableCell>{plan.rate}</TableCell>
+                    <TableCell>{plan.tenure}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-      </section>
-    </div>
-  );
-} 
+        {/* Steps */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+          {investmentSteps.map((step, i) => {
+            const Icon = step.icon
+            return (
+              <div key={i}
+                className={`flex flex-col items-center delay-[${i * 100}ms]text-center p-6 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-500 ${
+                  visibleItems.steps.includes(i)
+                    ? "opacity-100 translate-y-0 scale-100"
+                    : "opacity-0 translate-y-10 scale-95"
+                }`}
+              >
+                {/* <div className="bg-blue-600/20 text-blue-300 rounded-full p-3 mb-4"> */}
+                <div className="p-3 bg-gradient-to-br from-yellow-600 via-purple-800 to-slate-700 text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg mb-4">
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
+                <p className="text-sm text-gray-300">{step.description}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}

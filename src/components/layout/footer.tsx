@@ -12,7 +12,7 @@ export default function Footer() {
   const hideFooter = path === '/auth/register' || path === '/auth/signin' ? true : false;
 
   return (
-    <div className={`${hideFooter ? 'hidden' : 'flex'} w-full text-white bg-gray-900 py-12`}>
+    <div className={`${hideFooter ? 'hidden' : 'flex'} w-full text-white bg-[#1a202c] py-12`}>
       <div className="container flex mx-auto flex-col py-4 px-4 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mx-auto">
           <div>

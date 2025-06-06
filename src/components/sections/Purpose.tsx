@@ -1,64 +1,153 @@
-import { HeartHandshake } from 'lucide-react'
-import Image from 'next/image'
-import React from 'react'
-import {
-    Briefcase,
-    BadgeCheck,
-    Lightbulb,
-    Headset,
-  } from 'lucide-react'
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { HeartHandshake, Briefcase, BadgeCheck, Lightbulb, Headset, ArrowRight, Sparkles } from "lucide-react"
+import { features } from "@/lib/globalConst"
 
 export default function Purpose() {
-  
-    const features = [
-        {
-          label: 'Expert Financial Guidance',
-          description:
-            'Our experienced team of financial experts provides personalized advice to help you make informed investment decisions and achieve your financial goals.',
-          icon: Briefcase,
-        },
-        {
-          label: 'Proven Track Record',
-          description:
-            'With a history of delivering consistent returns, we have built a reputation for trust and reliability in the investment industry.',
-          icon: BadgeCheck,
-        },
-        {
-          label: 'Innovative Investment Solutions',
-          description:
-            'We leverage cutting-edge technology and data-driven insights to offer innovative investment strategies tailored to meet the evolving needs of our clients.',
-          icon: Lightbulb, 
-        },
-        {
-          label: 'Comprehensive Support',
-          description:
-            'From account setup to portfolio management, our dedicated customer service team is here to provide you with full support every step of the way.',
-          icon: Headset,
-        },
-    ]
-    
+  const [isVisible, setIsVisible] = useState(false)
+  const [visibleCards, setVisibleCards] = useState<number[]>([])
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          // Animate cards one by one
+          features.forEach((_, index) => {
+            setTimeout(() => {
+              setVisibleCards((prev) => [...prev, index])
+            }, index * 150)
+          })
+        }
+      },
+      { threshold: 0.1 },
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <section className="w-full bg-white py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-                Our Purpose & Key Features
-            </h2>
-            <p className="text-gray-600 mb-12 max-w-2xl mx-auto">
-                We're on a mission to fight hunger and improve lives by connecting communities to food resources and financial empowerment. Here's how we make it happen:
-            </p>
+    <section
+      ref={sectionRef}
+      className="w-full bg-gradient-to-br from-gray-50 via-white to-blue-50 py-24 px-6 relative overflow-hidden"
+    >
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-yellow-200 rounded-full opacity-10 -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-200 rounded-full opacity-10 translate-x-1/3 translate-y-1/3 animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-green-200 rounded-full opacity-5 -translate-x-1/2 -translate-y-1/2 animate-bounce"></div>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center">
-                {features.map((feature, idx) => (
-                    <div key={idx} className="p-6 rounded-xl shadow hover:shadow-md bg-white text-center">
-                        <feature.icon className="w-8 h-8 text-blue-600 mb-4 mx-auto" />
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">{feature.label}</h3>
-                        <p className="text-gray-600">{feature.description}</p>
-                    </div>
-                ))}
+      <div className="max-w-5xl mx-auto text-center relative z-10">
+        {/* Section Heading with enhanced animations */}
+        <div className={`flex flex-col items-center space-y-4 mb-16 transition-all duration-1000 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-lg opacity-30 animate-pulse"></div>
+            <div className="relative w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+              <HeartHandshake className="w-8 h-8 text-white animate-bounce" />
             </div>
-        </div>
-    </section>
+          </div>
 
+          <div className="space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              Our Purpose & Key Features
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full"></div>
+          </div>
+
+          <p className="text-gray-600 max-w-3xl text-lg leading-relaxed">
+            We're on a mission to fight hunger and improve lives by connecting communities to food resources and
+            financial empowerment. Here's how we make it happen:
+          </p>
+        </div>
+
+        {/* Enhanced Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {features.map((feature, idx) => (
+            <div
+              key={idx}
+              className={`group relative bg-white p-8 rounded-3xl shadow-lg hover:shadow-2xl border border-gray-100 transition-all duration-700 transform ${
+                visibleCards.includes(idx) ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95"
+              } hover:scale-105 hover:-translate-y-2`}
+              style={{ transitionDelay: `${feature.delay}ms` }}
+            >
+              {/* Gradient border effect */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-r ${feature.color} rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+              ></div>
+
+              {/* Floating sparkles effect */}
+              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+              </div>
+
+              {/* Icon with enhanced styling */}
+              <div
+                className={`relative w-16 h-16 ${feature.iconBg} rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-all duration-300 shadow-md`}
+              >
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r ${feature.color} rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
+                ></div>
+                <feature.icon className={`w-8 h-8 ${feature.iconColor} relative z-10 group-hover:animate-pulse`} />
+              </div>
+
+              {/* Content */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors duration-300">
+                  {feature.label}
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                  {feature.description}
+                </p>
+              </div>
+
+              {/* Hover arrow indicator */}
+              <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                <ArrowRight className="w-5 h-5 text-gray-400" />
+              </div>
+
+              {/* Animated background pattern */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-500">
+                <div
+                  className="w-full h-full"
+                  style={{
+                    backgroundImage: `radial-gradient(circle at 20px 20px, currentColor 1px, transparent 0)`,
+                    backgroundSize: "40px 40px",
+                  }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Call to action section */}
+        <div
+          className={`mt-16 transition-all duration-1000 delay-800 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl p-8 text-white shadow-2xl">
+            <h3 className="text-2xl font-bold mb-4">Ready to Transform Your Financial Future?</h3>
+            <p className="text-yellow-100 mb-6 max-w-2xl mx-auto">
+              Join thousands of families who have already started their journey towards food security and financial
+              empowerment.
+            </p>
+            <button className="bg-white text-gray-800 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+              Get Started Today
+              <ArrowRight className="inline-block w-5 h-5 ml-2" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
