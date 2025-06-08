@@ -7,7 +7,7 @@ import { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
-
+import Blubs from "@/components/layout/blubs"
 
 export const metadata: Metadata = {
     title: "Contact Us",
@@ -30,7 +30,8 @@ export default function Contact() {
           <h1 className="text-white text-4xl font-bold">Contact Us</h1>
         </div>
       </div>
-      <main className="w-full bg-white p-6 px-0 md:p-12">
+      <main className="w-full bg-white p-6 px-0 md:p-12 relative">
+        <Blubs/>
         <div className="flex flex-col md:flex-row gap-8 items-center max-w-4xl mx-auto">
             <section id='contactInfo' className="flex flex-col w-full space-y-12 p-4 md:p-8">
                 <div className="flex flex-col">

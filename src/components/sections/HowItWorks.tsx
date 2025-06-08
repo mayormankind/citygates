@@ -4,59 +4,12 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  FileText, Settings, Calculator, CreditCard, TrendingUp,
-  Calendar, Wallet, CheckCircle, Sparkles, ArrowRight, Star,
-} from "lucide-react"
+import { Sparkles, ArrowRight, Star } from "lucide-react"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../ui/table"
-
-
-
-const investmentPlans = [
-  {
-    name: "CityMax",
-    min: "₦1,000,000",
-    rate: "12%",
-    tenure: "365 Days",
-    popular: false,
-    classes: {
-      bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-600",
-    },
-  },
-  {
-    name: "CityFlex",
-    min: "₦500,000",
-    rate: "10%",
-    tenure: "182 or 365 Days",
-    popular: true,
-    classes: {
-      bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-600",
-    },
-  },
-  {
-    name: "CityCrux",
-    min: "₦50,000",
-    rate: "7%",
-    tenure: "90, 182 or 365 Days",
-    popular: false,
-    classes: {
-      bg: "bg-green-50", border: "border-green-200", text: "text-green-600",
-    },
-  },
-]
-
-const investmentSteps = [
-  { title: "Pick Investment Form", description: "Choose a CityGatesFB Investment Form to get started", icon: FileText },
-  { title: "Select Package", description: "Fill the form and select your preferred Investment Package", icon: Settings },
-  { title: "Set Investment Amount", description: "Name your investment and input the amount you want to invest", icon: Calculator },
-  { title: "Choose Payment Method", description: "Select your preferred method of payment to CityGatesFB", icon: CreditCard },
-  { title: "Configure Top-ups", description: "Choose your periodic top-up type and value for growth", icon: TrendingUp },
-  { title: "Select Tenure", description: "Pick your preferred tenor from the available options", icon: Calendar },
-  { title: "Set Payout Account", description: "Indicate where you want your investment paid at maturity", icon: Wallet },
-  { title: "Review & Confirm", description: "Review summary, accept terms and get your investment certificate", icon: CheckCircle },
-]
+import { investmentPlans } from "@/lib/globalConst"
+import { investmentSteps } from "@/lib/globalConst"
 
 export default function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null)
@@ -64,33 +17,42 @@ export default function HowItWorks() {
   const [visibleItems, setVisibleItems] = useState({ plans: [] as number[], steps: [] as number[] })
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !isVisible) {
-          setIsVisible(true)
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true)
 
-          investmentPlans.forEach((_, i) =>
+        // Animate plans
+        investmentPlans.forEach((_, i) =>
+          setTimeout(() => setVisibleItems(prev => ({
+            ...prev,
+            plans: [...prev.plans, i],
+          })), i * 150)
+        )
+
+        // Animate steps after a delay
+        setTimeout(() => {
+          investmentSteps.forEach((_, i) =>
             setTimeout(() => setVisibleItems(prev => ({
-              ...prev, plans: [...prev.plans, i]
-            })), i * 150)
+              ...prev,
+              steps: [...prev.steps, i],
+            })), i * 100)
           )
+        }, 800)
+      } else {
+        // Reset when out of view
+        setIsVisible(false)
+        setVisibleItems({ plans: [], steps: [] })
+      }
+    },
+    { threshold: 0.1 }
+  )
 
-          setTimeout(() => {
-            investmentSteps.forEach((_, i) =>
-              setTimeout(() => setVisibleItems(prev => ({
-                ...prev, steps: [...prev.steps, i]
-              })), i * 100)
-            )
-          }, 800)
-        }
-      },
-      { threshold: 0.1 }
-    )
+  const ref = sectionRef.current
+  if (ref) observer.observe(ref)
+  return () => observer.disconnect()
+}, [])
 
-    const ref = sectionRef.current
-    if (ref) observer.observe(ref)
-    return () => observer.disconnect()
-  }, [isVisible])
 
     return (
     <section ref={sectionRef} className="relative w-full bg-gradient-to-br from-gray-900 via-slate-900 to-black py-24 overflow-hidden">
@@ -148,7 +110,7 @@ export default function HowItWorks() {
                 {investmentPlans.map((plan, i) => (
                   <TableRow
                     key={plan.name}
-                    className={`transition-all duration-500 transform hover:scale-105 ${plan.classes.bg} ${plan.classes.border} ${
+                    className={`transition-all duration-500 transform ${plan.classes.bg} ${plan.classes.border} ${
                       visibleItems.plans.includes(i) ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95"
                     }`}
                     style={{ transitionDelay: `${i * 150}ms` }}
@@ -171,27 +133,38 @@ export default function HowItWorks() {
             </Table>
           </div>
         </div>
-        {/* Steps */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
-          {investmentSteps.map((step, i) => {
-            const Icon = step.icon
-            return (
-              <div key={i}
-                className={`flex flex-col items-center delay-[${i * 100}ms]text-center p-6 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-500 ${
-                  visibleItems.steps.includes(i)
-                    ? "opacity-100 translate-y-0 scale-100"
-                    : "opacity-0 translate-y-10 scale-95"
-                }`}
-              >
-                {/* <div className="bg-blue-600/20 text-blue-300 rounded-full p-3 mb-4"> */}
-                <div className="p-3 bg-gradient-to-br from-yellow-600 via-purple-800 to-slate-700 text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg mb-4">
-                  <Icon className="w-6 h-6" />
+        <div>
+          <div
+            className={`text-center mb-16 transition-all duration-1000 delay-700 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">How It Works</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Get started with your investment in just 10 simple steps</p>
+          </div>
+          {/* Steps */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+            {investmentSteps.map((step, i) => {
+              const Icon = step.icon
+              return (
+                <div key={i}
+                  className={`relative flex flex-col items-center text-center p-6 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-500 ${
+                    visibleItems.steps.includes(i)
+                      ? "opacity-100 translate-y-0 scale-100"
+                      : "opacity-0 translate-y-10 scale-95"
+                  }`}
+                  style={{ transitionDelay: `${i * 100}ms` }}
+                >
+                  <span className="absolute flex top-1 left-2 w-6 h-fit opacity-20 font-bold text-2xl text-white">{i + 1}</span>
+                    <div className="p-3 bg-gradient-to-br from-yellow-600 via-purple-800 to-slate-700 text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg mb-4">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
+                  <p className="text-sm text-gray-300">{step.description}</p>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-                <p className="text-sm text-gray-300">{step.description}</p>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
     </section>

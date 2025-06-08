@@ -29,7 +29,7 @@ export default function Header() {
   const hideHeader = pathname === '/auth/register' || pathname === '/auth/signin' ? true : false;
 
   return (
-    <header className={`${hideHeader ? 'hidden' : 'block'} bg-white/80 backdrop-blur-md sticky top-0 border-b shadow-sm z-20 border-white/10`}>
+    <header className={`${hideHeader ? 'hidden' : 'block'} bg-white/80 backdrop-blur-md sticky top-0 border-b shadow-sm z-50 border-white/10`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="text-2xl flex gap-2 items-center font-bold text-gray-800">
           <Image src={'/logo.jpeg'} width={1000} height={1000} alt='CityGatesFB logo' className='w-10 h-10'/>

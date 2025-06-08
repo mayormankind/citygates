@@ -1,77 +1,109 @@
-'use client';
+"use client"
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import Image from 'next/image';
+import Image from "next/image"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { packages } from '@/lib/globalConst';
+import Separator from "@/components/layout/separator"
+import { useRevealOnScroll } from "@/lib/useRevealOnScroll"
+
 
 export default function Packages() {
-  const packages = [
-    {
-      label: "Double Jumbo",
-      description:
-        "Designed for the Odogwus who like to do it Big because of their big responsibility",
-      price: "₦1100",
-      per: "Per day",
-      image: "/jumbo.jpg",
-    },
-    {
-      label: "Chickito Bumper",
-      description:
-        "It is designed to meet your craving for high-quality food supply without having to break the bank",
-      price: "₦350",
-      per: "Per day",
-      image: "/product.jpg",
-    },
-    {
-      label: "Minimini",
-      description:
-        "Minimini is packaged to suit your pocket. It is creatively packaged not to hurt your purse.",
-      price: "₦1100",
-      per: "Per day",
-      image: "/mini.jpg",
-    },
-  ];
+
+  const { sectionRef, isVisible, visibleCards } = useRevealOnScroll(packages.length, 150, true)
+
 
   return (
-    <section className="w-full bg-gray-100 py-20 px-6">
-      <div className="max-w-5xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-          Plans and Packages We Offer
-        </h2>
-        <p className="text-gray-600 mb-12 max-w-2xl mx-auto">
-          Choose the package that suits your needs without compromising quality or budget.
-        </p>
+    // <section ref={sectionRef}
+    //   className="w-full bg-gradient-to-br from-[#5B1A68] via-purple-800 to-[#5B1A68] py-24 px-6 relative overflow-hidden"
+    // >
+    <section ref={sectionRef}
+      className="w-full bg-gradient-to-br from-[#5B1A68]/70  via-purple-800 to-[#5B1A68] py-24 px-6 relative overflow-hidden"
+    >
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-[#F2C400]/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#F2C400]/5 rounded-full blur-2xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-white/5 rounded-full blur-xl animate-bounce"></div>
+        <div className="absolute inset-0 opacity-10">
+          <div className="h-full w-full"
+            style={{
+              backgroundImage: "radial-gradient(circle at 1px 1px, rgba(242, 196, 0, 0.3) 1px, transparent 0)",
+              backgroundSize: "50px 50px",
+            }}
+          />
+        </div>
       </div>
 
-      <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto">
-        {packages.map((pkg) => (
-          <Card
-            key={pkg.label}
-            className="hover:shadow-xl transition-shadow duration-300 ease-in-out grid md:grid-cols-2 py-0 gap-0"
-          >
-            <Image
-              src={pkg.image}
-              alt={pkg.label}
-              width={1000} height={1000}
-              className="w-full h-full object-cover rounded-t-md"
-            />
-            <div className="flex flex-col gap-4 p-4">
-              <CardHeader className="space-y-2 text-left">
-                <CardTitle className="text-xl font-semibold text-gray-800">
-                  {pkg.label}
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  {pkg.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto pt-2 border-t">
-                <p className="text-lg font-medium text-gray-800">{pkg.price}
-                <span className="ml-1 text-sm text-gray-500">{pkg.per}</span></p>
-              </CardContent>
-            </div>
-          </Card>
-        ))}
+      <div className="max-w-7xl mx-auto text-center relative z-10">
+        {/* Section Header */}
+        <div className={`space-y-6 mb-16 transition-all duration-1000 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Plans and Packages We Offer</h2>
+          <Separator/>
+          <p className="text-purple-100 mb-12 max-w-3xl mx-auto leading-relaxed text-lg">
+            Choose the package that suits your needs without compromising quality or budget. Each plan is designed to
+            provide maximum value for your family's food security.
+          </p>
+        </div>
+
+        {/* Packages Grid */}
+        <div className="grid gap-8 md:grid-cols-2 sm:grid-cols-1 max-w-5xl mx-auto">
+          {packages.map((pkg,index) => (
+            <Card
+              key={pkg.label}
+              className={`grid md:grid-cols-2 py-0 gap-0 group relative delay-[${index * 200}ms] overflow-hidden transition-all duration-500 transform ${
+                visibleCards.includes(index)
+                  ? "opacity-100 translate-y-0 scale-100"
+                  : "opacity-0 translate-y-10 scale-95"
+              } hover:scale-105 hover:shadow-2xl bg-white border ${pkg.borderColor} rounded-xl`}
+            >
+              {/* background overlay on hover */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${pkg.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`}
+              ></div>
+
+              {/* Image section */}
+              <div className="relative overflow-hidden rounded-t-2xl">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10"></div>
+                <Image
+                  src={pkg.image}
+                  alt={pkg.label}
+                  width={1000}
+                  height={1000}
+                  className="w-full h-60 object-cover group-hover:scale-110 transition-transform duration-500 rounded-l-md"
+                />
+                {/* Floating Icon */}
+                <div
+                  className={`absolute top-4 left-4 w-12 h-12 bg-gradient-to-r ${pkg.color} rounded-full flex items-center justify-center shadow-lg z-20`}
+                >
+                  <pkg.icon className="h-6 w-6 text-white" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 p-4 md:p-6">
+                <CardHeader className="space-y-2 text-left p-0">
+                  <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                    {pkg.label}
+                  </CardTitle>
+                  <CardDescription className="leading-relaxed p-0 text-gray-500">
+                    {pkg.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto pt-2 border-t">
+                  <div className='w-full text-left'>
+                    <span className="text-3xl font-bold text-[#5B1A68]">{pkg.price}</span>
+                    <span className="ml-2 text-sm text-gray-500">{pkg.per}</span>
+                  </div>
+                </CardContent>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
-  );
+  )
 }

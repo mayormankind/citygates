@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import Blubs from "@/components/layout/blubs"
 import Image from "next/image";
 import { Metadata } from "next";
 
@@ -106,7 +107,8 @@ const Faqs = () => {
             Get answers to common questions about CityGate's platform, security, and support.</p>
         </div>
       </div>
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 relative">
+        <Blubs/>
         <div className="max-w-3xl mx-auto">
           <Accordion type="single" collapsible className="w-full bg-white">
             {faqs.map((faq, index) => (

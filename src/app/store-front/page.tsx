@@ -1,11 +1,7 @@
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Facebook, Instagram, Linkedin, MapPin, Phone, X } from 'lucide-react'
 import { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import Blubs from "@/components/layout/blubs"
 import React from 'react'
 
 export const metadata: Metadata = {
@@ -29,7 +25,8 @@ export default function Contact() {
           <h1 className="text-white text-4xl font-bold">Our Store Front</h1>
         </div>
       </div>
-      <main className="w-full bg-white p-6 px-0 md:p-12">
+      <main className="w-full bg-white p-6 px-0 md:p-12 relative">
+        <Blubs/>
         <div className="flex flex-col md:flex-row gap-8 items-center max-w-4xl mx-auto">
             
         </div>

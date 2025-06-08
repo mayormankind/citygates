@@ -1,29 +1,16 @@
 'use client'
 
+import { sponsors } from '@/lib/globalConst'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 
 export default function PartnersSection() {
-  const sponsors = [
-    { name: 'Activa', logo: '/activa.png' },
-    { name: 'FCMB', logo: '/fcmb.png' },
-    { name: 'Gando', logo: '/gando.jpg' },
-    { name: 'Kings Oil', logo: '/kings.png' },
-    { name: 'Milo', logo: '/milo.jpg' },
-    { name: 'GB foods', logo: '/gb.svg' },
-  ]
 
-  const containerRef = useRef<HTMLDivElement>(null)
+  // Duplicate data for seamless scroll
+  const extendedSponsors = [...sponsors, ...sponsors]
   const scrollRef = useRef<HTMLDivElement>(null)
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([])
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
-
-  // Clone items for seamless looping
-  useEffect(() => {
-    if (!containerRef.current || !scrollRef.current) return
-    const container = containerRef.current
-    const original = Array.from(container.children)
-    original.forEach(child => container.appendChild(child.cloneNode(true)))
-  }, [])
 
   // Auto-scroll
   useEffect(() => {
@@ -34,7 +21,6 @@ export default function PartnersSection() {
       const el = scrollRef.current
       el.scrollLeft += 1
 
-      // Reset scroll to beginning once halfway through
       if (el.scrollLeft >= el.scrollWidth / 2) {
         el.scrollLeft = 0
       }
@@ -49,26 +35,26 @@ export default function PartnersSection() {
   // Detect center logo
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!scrollRef.current || !containerRef.current) return
+      if (!scrollRef.current || imageRefs.current.length === 0) return
       const parent = scrollRef.current
-      const center = parent.offsetWidth / 2
-      const children = Array.from(containerRef.current.children)
+      const center = parent.offsetWidth / 2 + parent.getBoundingClientRect().left
 
       let closest = 0
       let closestDist = Infinity
 
-      children.forEach((child, index) => {
-        const box = child.getBoundingClientRect()
+      imageRefs.current.forEach((el, index) => {
+        if (!el) return
+        const box = el.getBoundingClientRect()
         const mid = box.left + box.width / 2
         const dist = Math.abs(center - mid)
         if (dist < closestDist) {
-          closest = index % sponsors.length
+          closest = index
           closestDist = dist
         }
       })
 
       setActiveIndex(closest)
-    }, 100)
+    }, 300)
 
     return () => clearInterval(interval)
   }, [])
@@ -85,15 +71,13 @@ export default function PartnersSection() {
 
         <div
           ref={scrollRef}
-          className="relative w-full overflow-hidden whitespace-nowrap"
+          className="relative w-full overflow-hidden whitespace-nowrap scroll-smooth"
         >
-          <div
-            ref={containerRef}
-            className="flex gap-12 w-max"
-          >
-            {sponsors.map((sponsor, index) => (
+          <div className="flex gap-12 w-max">
+            {extendedSponsors.map((sponsor, index) => (
               <div
                 key={`logo-${index}`}
+                ref={(el) => { imageRefs.current[index] = el; }}
                 className="flex items-center justify-center min-w-[120px] h-[80px] transition-all duration-300"
               >
                 <Image
@@ -101,7 +85,7 @@ export default function PartnersSection() {
                   alt={sponsor.name}
                   width={120}
                   height={60}
-                  className={`object-contain transition duration-500 ${
+                  className={`object-contain transition duration-500 will-change-filter ${
                     index === activeIndex ? 'grayscale-0' : 'grayscale'
                   }`}
                 />
@@ -113,4 +97,3 @@ export default function PartnersSection() {
     </section>
   )
 }
-

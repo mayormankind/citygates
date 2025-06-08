@@ -1,48 +1,23 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { HeartHandshake, Briefcase, BadgeCheck, Lightbulb, Headset, ArrowRight, Sparkles } from "lucide-react"
+import { HeartHandshake, ArrowRight, Sparkles } from "lucide-react"
 import { features } from "@/lib/globalConst"
+import Separator from "@/components/layout/separator"
+import Blubs from "@/components/layout/blubs"
+import { useRevealOnScroll } from "@/lib/useRevealOnScroll"
 
 export default function Purpose() {
-  const [isVisible, setIsVisible] = useState(false)
-  const [visibleCards, setVisibleCards] = useState<number[]>([])
-  const sectionRef = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          // Animate cards one by one
-          features.forEach((_, index) => {
-            setTimeout(() => {
-              setVisibleCards((prev) => [...prev, index])
-            }, index * 150)
-          })
-        }
-      },
-      { threshold: 0.1 },
-    )
+  const { sectionRef, isVisible, visibleCards } = useRevealOnScroll(features.length, 150, true)
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
 
-    return () => observer.disconnect()
-  }, [])
 
   return (
     <section
       ref={sectionRef}
       className="w-full bg-gradient-to-br from-gray-50 via-white to-blue-50 py-24 px-6 relative overflow-hidden"
     >
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-0 w-72 h-72 bg-yellow-200 rounded-full opacity-10 -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-200 rounded-full opacity-10 translate-x-1/3 translate-y-1/3 animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-green-200 rounded-full opacity-5 -translate-x-1/2 -translate-y-1/2 animate-bounce"></div>
-      </div>
+      <Blubs/>
 
       <div className="max-w-5xl mx-auto text-center relative z-10">
         {/* Section Heading with enhanced animations */}
@@ -58,10 +33,11 @@ export default function Purpose() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
               Our Purpose & Key Features
             </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full"></div>
+            {/* <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full"></div> */}
+            <Separator/>
           </div>
 
           <p className="text-gray-600 max-w-3xl text-lg leading-relaxed">
@@ -78,7 +54,7 @@ export default function Purpose() {
               className={`group relative bg-white p-8 rounded-3xl shadow-lg hover:shadow-2xl border border-gray-100 transition-all duration-700 transform ${
                 visibleCards.includes(idx) ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95"
               } hover:scale-105 hover:-translate-y-2`}
-              style={{ transitionDelay: `${feature.delay}ms` }}
+              style={{ transitionDelay: `${idx * 200}ms` }}
             >
               {/* Gradient border effect */}
               <div

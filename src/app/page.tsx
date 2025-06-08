@@ -6,6 +6,7 @@ import Purpose from "@/components/sections/Purpose";
 import HeroSection from "@/components/sections/HeroSection";
 import About from "@/components/sections/About";
 import Packages from "@/components/sections/Packages";
+import PackagesNew from "@/components/sections/bin3";
 import Hero from "@/components/sections/Hero";
 import HowItWorksPage from "@/components/sections/HowItWorks";
 
@@ -18,6 +19,7 @@ const Home = () => {
       <Hero/>
       <About/>
       <Purpose/>
+      {/* <PackagesNew/> */}
       <Packages/>
       <HowItWorksPage/>
       <PartnersSection/>
