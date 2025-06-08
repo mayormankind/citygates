@@ -15,8 +15,10 @@ import {
   Briefcase,
   ChevronRight,
   ArrowRight,
+  CheckCircle,
 } from "lucide-react"
 import { Metadata } from "next"
+import { missions } from "@/lib/globalConst"
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -28,21 +30,21 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative w-full h-80">
+      <section className="relative w-full h-[70vh] overflow-hidden">
         <Image
           src="/about2.jpg"
           alt="About us"
           fill
           className="object-cover w-full h-full"
         />
-        <div className="absolute inset-0 bg-black/60 z-10" />
-        <div className="absolute inset-0 flex flex-col items-center max-w-5xl mx-auto text-center gap-6 justify-center z-20">
+        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 flex flex-col items-center max-w-4xl mx-auto px-4 text-center sm:px-6 gap-6 justify-center z-10 animate-fade-in">
           <h1 className="text-white text-4xl font-bold">About CityGates Food Bank</h1>
           <p className="text-lg text-white/60">
           Dedicated to providing quality food through innovative savings schemes, empowering communities, and alleviating hunger across Nigeria.</p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button className="bg-white text-black hover:bg-white/60">Join Our Community</Button>
-            <Button variant="outline" className="border-white text-white bg-transparent hover:bg-blue-50">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <Button size="lg" className="bg-white text-black hover:bg-white/60">Join Our Community</Button>
+            <Button size="lg" variant="outline" className="border-white text-white bg-transparent hover:bg-blue-50">
               Explore Our Services
             </Button>
           </div>
@@ -145,7 +147,15 @@ export default function AboutPage() {
             <div className="flex flex-col gap-2 p-6">
               <h1 className="text-3xl font-bold text-gray-900">Our Mission</h1>
               <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start">
+                {missions.map((item, index) => (
+                  <li key={index} className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </div>
+                    <span className="text-gray-700 leading-relaxed">{item}</span>
+                  </li>
+                ))}
+                {/* <li className="flex items-start">
                   <ChevronRight className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
                   <span>Foster sustainable productivity and investment activities among members and the public.</span>
                 </li>
@@ -166,7 +176,7 @@ export default function AboutPage() {
                 <li className="flex items-start">
                   <ChevronRight className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
                   <span>Promote among members the spirit of thrift and mutual help.</span>
-                </li>
+                </li> */}
               </ul>
             </div>
           </div>
@@ -177,8 +187,8 @@ export default function AboutPage() {
             <Tabs defaultValue="what-we-do" className="w-full">
               <div className="flex justify-center mb-8">
                 <TabsList className="grid grid-cols-2 w-full max-w-md">
-                  <TabsTrigger value="what-we-do">What We Do</TabsTrigger>
-                  <TabsTrigger value="our-beliefs">Our Beliefs</TabsTrigger>
+                  <TabsTrigger value="what-we-do" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">What We Do</TabsTrigger>
+                  <TabsTrigger value="our-beliefs" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">Our Beliefs</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="what-we-do" className="bg-blue-50 p-8 rounded-2xl">

@@ -166,3 +166,11 @@ export const sponsors = [
   { name: 'Milo', logo: '/milo.jpg' },
   { name: 'GB foods', logo: '/gb.svg' },
 ]
+
+export const missions = [
+  "Foster sustainable productivity and investment activities among members and the public",
+  "Encourage crave for fixed deposit which may be a guarantee for short-term loan facility",
+  "Enhance food security through our Food Bumper Pack project",
+  "Provide an investment platform capable of breaking the Chain of Poverty among members",
+  "Promote among members the spirit of thrift and mutual help",
+]
