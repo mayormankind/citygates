@@ -11,8 +11,7 @@ export default function Hero() {
         <div className="absolute bottom-1/3 left-1/4 w-64 h-64 bg-purple-400/5 rounded-full blur-2xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-yellow-500/20 rounded-full blur-xl animate-bounce delay-2000"></div>
         <div className="absolute inset-0 opacity-5">
-          <div
-            className="h-full w-full"
+          <div className="h-full w-full"
             style={{
               backgroundImage: "radial-gradient(circle at 1px 1px, rgba(253, 224, 71, 0.3) 1px, transparent 0)",
               backgroundSize: "50px 50px",
@@ -35,7 +34,7 @@ export default function Hero() {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-500">Finance</span>
                 </h1>
 
-                <p className="text-xl text-gray-300 leading-relaxed max-w-2xl">
+                <p className="text-xl text-gray-300 leading-relaxed max-w-2xl hidden md:block">
                   We make quality food accessible through simple savings because{" "}
                   <span className="text-yellow-400 font-semibold">no one should go hungry</span>. Join our community of
                   families building food security together.
