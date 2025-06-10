@@ -1,5 +1,8 @@
 "use client"
 
+export const dynamic = 'force-dynamic';
+
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -10,16 +13,14 @@ import React, { useEffect, useState } from 'react'
 
 export default function Signin() {
 
-  const [selectedTab, setSelectedTab] = useState('signin-as-customer');
+  const searchParams = useSearchParams()
+  const initialTab = searchParams.get('tab') === 'admin' ? 'signin-as-admin' : 'signin-as-customer'
 
-  const searchParams = useSearchParams();
+  const [selectedTab, setSelectedTab] = useState(initialTab)
 
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'admin') {
-      setSelectedTab('signin-as-admin');
-    }
-  }, [searchParams]);
+    setSelectedTab(initialTab)
+  }, [initialTab])
 
   return (
     <div className='w-full flex h-full min-h-screen bg-gradient-to-r from-[#5B1A68] via-purple-800 to-[#5B1A68] relative overflow-hidden'>
