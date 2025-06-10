@@ -60,13 +60,13 @@ export default function Header() {
               <Button variant="ghost">Account</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href="/auth/signin">
+              <Link href="/auth/signin?tab=customer">
                 <DropdownMenuItem>
                   <User className="h-4 w-4 mr-2" />
                   Sign in as Customer
                 </DropdownMenuItem>
               </Link>
-              <Link href="/auth/signin">
+              <Link href="/auth/signin?tab=admin">
                 <DropdownMenuItem>
                   <User className="h-4 w-4 mr-2" />
                   Sign in as Admin
@@ -114,8 +114,8 @@ export default function Header() {
               </Link>
             ))}
             <div className="border-t pt-4 space-y-2">
-              <Link href="/auth/signin" onClick={() => setMenuOpen(false)} className="block">Sign in as Customer</Link>
-              <Link href="/auth/signin" onClick={() => setMenuOpen(false)} className="block">Sign in as Admin</Link>
+              <Link href="/auth/signin?tab=customer" onClick={() => setMenuOpen(false)} className="block">Sign in as Customer</Link>
+              <Link href="/auth/signin?tab=admin" onClick={() => setMenuOpen(false)} className="block">Sign in as Admin</Link>
               <Link href="/auth/register" onClick={() => setMenuOpen(false)} className="block">Create Account</Link>
             </div>
           </motion.nav>

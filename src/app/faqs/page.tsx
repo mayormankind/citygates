@@ -101,7 +101,7 @@ const Faqs = () => {
           className="object-cover w-full h-full"
         />
         <div className="absolute inset-0 bg-black/60 z-10" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 text-center">
           <h1 className="text-white text-4xl font-bold">Frequently Asked Questions</h1>
           <p className="text-lg text-white/60">
             Get answers to common questions about CityGate's platform, security, and support.</p>

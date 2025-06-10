@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+// import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Facebook, Instagram, Linkedin, MapPin, Phone, X } from 'lucide-react'
@@ -8,6 +8,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import Blubs from "@/components/layout/blubs"
+import { Input } from '@/components/ui/input'
 
 export const metadata: Metadata = {
     title: "Contact Us",
@@ -20,7 +21,7 @@ export default function Contact() {
     <div className="w-full">
       <div className="relative w-full h-80">
         <Image
-          src="/contact.jpg"
+          src="/contact-us.jpg"
           alt="About us"
           fill
           className="object-cover w-full h-full"
@@ -31,12 +32,11 @@ export default function Contact() {
         </div>
       </div>
       <main className="w-full bg-white p-6 px-0 md:p-12 relative">
-        <Blubs/>
         <div className="flex flex-col md:flex-row gap-8 items-center max-w-4xl mx-auto">
             <section id='contactInfo' className="flex flex-col w-full space-y-12 p-4 md:p-8">
                 <div className="flex flex-col">
                     <h1 className="text-3xl font-bold text-black">Contact Information</h1>
-                    <p className='text-black/40'>Ask us any questions you have.</p>
+                    <p className='text-black/60'>Ask us any questions you have.</p>
                 </div>
                 <div className="flex flex-col space-y-4">
                     <div className="flex gap-4 items-center">
@@ -81,8 +81,8 @@ export default function Contact() {
                         <Input id='email' placeholder='Enter your email'/>
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label htmlFor="message">Your email address</Label>
-                        <Textarea id='message' placeholder='Enter your email'/>
+                        <Label htmlFor="message">Your message</Label>
+                        <Textarea id='message' placeholder='Enter your message'/>
                     </div>
                     <Button>Send Message</Button>
                 </form>
@@ -102,6 +102,7 @@ export default function Contact() {
                 ></iframe>
             </div>
         </div>
+        <Blubs/>
       </main>
     </div>
   )

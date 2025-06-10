@@ -7,13 +7,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Heart,
-  Users,
-  ShoppingBag,
-  Landmark,
-  Home,
-  Store,
-  Target,
-  Lightbulb,
   Briefcase,
   ArrowRight,
   CheckCircle,
@@ -49,17 +42,20 @@ export default function AboutPage() {
           <p className="text-lg text-white/60">
           Dedicated to providing quality food through innovative savings schemes, empowering communities, and alleviating hunger across Nigeria.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button size="lg" className="bg-white text-black hover:bg-white/60">Join Our Community</Button>
-            <Button size="lg" variant="outline" className="border-white text-white bg-transparent hover:bg-blue-50">
-              Explore Our Services
-            </Button>
+            <Link href="/auth/register">
+              <Button size="lg" className="bg-white text-black hover:bg-white/60">Join Our Community</Button>
+            </Link>
+            <Link href="/">
+              <Button size="lg" variant="outline" className="border-white text-white bg-transparent hover:bg-blue-50">
+                Explore Our Services
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Main Content */}
       <section className="py-16">
-        {/* <div className="mx-auto px-4 sm:px-6 lg:px-8"> */}
         <div className="mx-auto">
           {/* Who We Are */}
           <div className="grid md:grid-cols-2 gap-12 items-center mb-24 px-4 sm:px-6 lg:px-8">
@@ -150,7 +146,7 @@ export default function AboutPage() {
             </div>
 
             {/*mission section*/}
-            <div className="flex flex-col gap-2 p-6">
+            <div className="flex flex-col gap-2 p-6 order-first md:order-last">
               <h1 className="text-3xl font-bold text-gray-900">Our Mission</h1>
               <ul className="space-y-3 text-gray-700">
                 {missions.map((item, index) => (
@@ -225,27 +221,27 @@ export default function AboutPage() {
 
             <div className="relative">
               {/* Timeline Line */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-500 to-green-500"></div>
+              <div className="hidden md:flex absolute md:left-1/2 transform md:-translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-500 to-green-500"></div>
 
-              <div className="relative z-10">
+              <div className="relative z-10 flex flex-col space-y-8">
                 {/* 2018 */}
-                <div className="flex flex-col md:flex-row items-center mb-16">
-                  <div className="md:w-1/2 md:pr-12 mb-6 md:mb-0 md:text-right">
+                <div className="flex flex-col md:flex-row items-center md:mb-16 space-y-4 md:space-y-0">
+                  <div className="md:w-1/2 md:pr-12 mb-6 md:mb-0 md:text- start">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Champions Finance</h3>
                     <p className="text-gray-700">
                       Registered as a Multi-Purpose Cooperative Society Ltd. with the Federal Capital Territory
                       Authority (FCTA) in accordance to Section 2 of Nigeria Cooperative Society Act No. 98 of 2004.
                     </p>
                   </div>
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white border-4 border-blue-500 flex items-center justify-center z-10">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white border-4 border-blue-500 flex items-center justify-center z-10 order-first md:order-none">
                     <span className="font-bold text-blue-600">2018</span>
                   </div>
-                  <div className="md:w-1/2 md:pl-12 md:text-left"></div>
+                  <div className="hidden md:flex md:w-1/2 md:pl-12 md:text-left"></div>
                 </div>
 
                 {/* 2023 */}
                 <div className="flex flex-col md:flex-row items-center">
-                  <div className="md:w-1/2 md:pr-12 md:text-right"></div>
+                  <div className="hidden md:flex md:w-1/2 bg-amber-300 md:pr-12 md:text-right"></div>
                   <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white border-4 border-green-500 flex items-center justify-center z-10">
                     <span className="font-bold text-green-600">2023</span>
                   </div>
