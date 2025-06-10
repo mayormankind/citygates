@@ -10,8 +10,6 @@ export default function Purpose() {
 
   const { sectionRef, isVisible, visibleCards } = useRevealOnScroll(features.length, 150, true)
 
-
-
   return (
     <section
       ref={sectionRef}

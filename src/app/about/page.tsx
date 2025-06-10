@@ -1,3 +1,5 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -13,20 +15,24 @@ import {
   Target,
   Lightbulb,
   Briefcase,
-  ChevronRight,
   ArrowRight,
   CheckCircle,
 } from "lucide-react"
 import { Metadata } from "next"
-import { missions } from "@/lib/globalConst"
+import { missions, platforms } from "@/lib/globalConst"
+import { useRevealOnScroll } from "@/lib/useRevealOnScroll"
 
-export const metadata: Metadata = {
-  title: "About Us",
-  description: "CityGates Food Bank is an independent organization registered with the Corporate Affairs Commission with the intention to promote food security in the country. Our aim is to create a sustainable system that enables every individual to have access to quality food with little or no money despite prevailing economic challenges.",
-  icons:'/globe.svg'
-}
+// export const metadata: Metadata = {
+//   title: "About Us",
+//   description: "CityGates Food Bank is an independent organization registered with the Corporate Affairs Commission with the intention to promote food security in the country. Our aim is to create a sustainable system that enables every individual to have access to quality food with little or no money despite prevailing economic challenges.",
+//   icons:'/globe.svg'
+// }
 
 export default function AboutPage() {
+
+    const { sectionRef, isVisible, visibleCards } = useRevealOnScroll(platforms.length, 150, true)
+  
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -148,35 +154,13 @@ export default function AboutPage() {
               <h1 className="text-3xl font-bold text-gray-900">Our Mission</h1>
               <ul className="space-y-3 text-gray-700">
                 {missions.map((item, index) => (
-                  <li key={index} className="flex items-start space-x-3">
+                  <li key={index} className="flex items-start space-x-3 animate-fade-in">
                     <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                     </div>
                     <span className="text-gray-700 leading-relaxed">{item}</span>
                   </li>
                 ))}
-                {/* <li className="flex items-start">
-                  <ChevronRight className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                  <span>Foster sustainable productivity and investment activities among members and the public.</span>
-                </li>
-                <li className="flex items-start">
-                  <ChevronRight className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                  <span>
-                    Encourage crave for fixed deposit which may be a guarantee for short-term loan facility.
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <ChevronRight className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                  <span>Enhance food security through our Food Bumper Pack project.</span>
-                </li>
-                <li className="flex items-start">
-                  <ChevronRight className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                  <span>Provide an investment platform capable of breaking the Chain of Poverty among members.</span>
-                </li>
-                <li className="flex items-start">
-                  <ChevronRight className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                  <span>Promote among members the spirit of thrift and mutual help.</span>
-                </li> */}
               </ul>
             </div>
           </div>
@@ -233,7 +217,7 @@ export default function AboutPage() {
           {/* Our Transformation */}
           <div className="mb-24 w-full max-w-5xl mx-auto px-4 md:px-0">
             <div className="text-center mb-12">
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
+              <div className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
                 Our Journey
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Our Transformation</h2>
@@ -279,7 +263,7 @@ export default function AboutPage() {
           </div>
 
           {/* Our Platforms */}
-          <div className="w-full max-w-5xl mx-auto">
+          <section ref={sectionRef} className="w-full max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
                 Our Services
@@ -292,92 +276,27 @@ export default function AboutPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Food Bumper Packages */}
-              <Card className="border-blue-100 hover:shadow-lg transition-all">
-                <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <ShoppingBag className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Food Bumper Packages</h3>
-                  <p className="text-gray-700 mb-4">
-                    A food security initiative with zero tolerance for hunger. Participants contribute a minimum of ₦200
-                    daily for a tenure of three, six, or 12 months to collect bountiful food packages.
-                  </p>
-                  <Link href="#" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
-
-              {/* Personal Savings and Loan Scheme */}
-              <Card className="border-green-100 hover:shadow-lg transition-all">
-                <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <Landmark className="h-6 w-6 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Personal Savings and Loan Scheme</h3>
-                  <p className="text-gray-700 mb-4">
-                    Save through regular contributions redeemable at the end of tenure or on request. Access
-                    non-collateral, low-interest loans and partake in year-end dividends.
-                  </p>
-                  <Link href="#" className="inline-flex items-center text-green-600 hover:text-green-700 font-medium">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
-
-              {/* Own Your Own Property */}
-              <Card className="border-blue-100 hover:shadow-lg transition-all">
-                <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <Home className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Own Your Own Property</h3>
-                  <p className="text-gray-700 mb-4">
-                    Own household and personal properties by making small payments over 3, 6, or 12 months. Items
-                    include laptops, plasma TVs, gas cookers, and generators.
-                  </p>
-                  <Link href="#" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
-
-              {/* The Store Front */}
-              <Card className="border-green-100 hover:shadow-lg transition-all">
-                <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <Store className="h-6 w-6 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">The Store Front</h3>
-                  <p className="text-gray-700 mb-4">
-                    An online store that provides the opportunity to buy food items directly from us at wholesale
-                    prices, making quality food more accessible.
-                  </p>
-                  <Link href="#" className="inline-flex items-center text-green-600 hover:text-green-700 font-medium">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
-
-              {/* Cooperative Membership */}
-              <Card className="border-blue-100 hover:shadow-lg transition-all md:col-span-2 lg:col-span-1">
-                <CardContent className="pt-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <Users className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Cooperative Membership</h3>
-                  <p className="text-gray-700 mb-4">
-                    Open a Cooperative Membership Account (CMA) and Save As You Earn (SAYE) account for periods of
-                    three, six, nine, or twelve months. Access loans without collateral at minimum interest rates.
-                  </p>
-                  <Link href="#" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
+              {platforms.map((platform, index) => (
+                <Card key={platform.title} className={`group relative overflow-hidden transition-all duration-700 transform ${
+                  visibleCards.includes(index)
+                    ? "opacity-100 translate-y-0 scale-100"
+                    : "opacity-0 translate-y-10 scale-95"
+                } hover:scale-105 hover:shadow-2xl ${platform.borderColor} border-2`}
+                style={{ transitionDelay: `${index * 150}ms` }}>
+                  <CardContent className="pt-8">
+                    <div className={`w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                      <platform.icon className={`h-6 w-6 ${platform.iconColor}`} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-gray-800 transition-colors">{platform.title}</h3>
+                    <p className="text-gray-700 mb-4 leading-relaxed group-hover:text-gray-600 transition-colors">{platform.description}</p>
+                    <Link href="#" className={`inline-flex items-center ${platform.iconColor} hover:opacity-80 font-medium group/link`}>
+                      Learn more <ArrowRight className="ml-1 h-4 w-4  group-hover/link:translate-x-1 transition-transform duration-300" />
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </div>
+          </section>
         </div>
       </section>
 

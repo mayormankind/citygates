@@ -54,7 +54,7 @@ export default function PartnersSection() {
       })
 
       setActiveIndex(closest)
-    }, 300)
+    }, 100)
 
     return () => clearInterval(interval)
   }, [])

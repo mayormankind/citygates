@@ -1,4 +1,10 @@
-import { Briefcase, BadgeCheck, Lightbulb, Headset, Calendar, Wallet, CheckCircle, FileText, Settings, Calculator, CreditCard, TrendingUp, ShoppingBag, Star, ArrowRight, Sparkles, Crown, Heart, Facebook, Instagram, Linkedin, MapPin, Store, X  } from "lucide-react"
+import { Briefcase, BadgeCheck, Lightbulb, Headset, Calendar, Wallet, CheckCircle, FileText, Settings, Calculator, CreditCard, TrendingUp, ShoppingBag, Star, ArrowRight, Sparkles, Crown, Heart, Facebook, Instagram, Linkedin, MapPin, Store, X,
+  Users,
+  Landmark,
+  Home,
+  Target,
+  Award,
+  Building,  } from "lucide-react"
 
 export const features = [
     {
@@ -174,3 +180,61 @@ export const missions = [
   "Provide an investment platform capable of breaking the Chain of Poverty among members",
   "Promote among members the spirit of thrift and mutual help",
 ]
+
+export const platforms = [
+    {
+      title: "Food Bumper Packages",
+      description:
+        "A food security initiative with zero tolerance for hunger. Participants contribute a minimum of ₦200 daily for a tenure of three, six, or 12 months to collect bountiful food packages.",
+      icon: ShoppingBag,
+      color: "from-blue-500 to-blue-600",
+      bgColor: "bg-blue-50",
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
+      borderColor: "border-blue-100",
+    },
+    {
+      title: "Personal Savings and Loan Scheme",
+      description:
+        "Save through regular contributions redeemable at the end of tenure or on request. Access non-collateral, low-interest loans and partake in year-end dividends.",
+      icon: Landmark,
+      color: "from-green-500 to-green-600",
+      bgColor: "bg-green-50",
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600",
+      borderColor: "border-green-100",
+    },
+    {
+      title: "Own Your Own Property",
+      description:
+        "Own household and personal properties by making small payments over 3, 6, or 12 months. Items include laptops, plasma TVs, gas cookers, and generators.",
+      icon: Home,
+      color: "from-purple-500 to-purple-600",
+      bgColor: "bg-purple-50",
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      borderColor: "border-purple-100",
+    },
+    {
+      title: "The Store Front",
+      description:
+        "An online store that provides the opportunity to buy food items directly from us at wholesale prices, making quality food more accessible.",
+      icon: Store,
+      color: "from-orange-500 to-orange-600",
+      bgColor: "bg-orange-50",
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      borderColor: "border-orange-200",
+    },
+    {
+      title: "Cooperative Membership",
+      description:
+        "Open a Cooperative Membership Account (CMA) and Save As You Earn (SAYE) account for periods of three, six, nine, or twelve months. Access loans without collateral at minimum interest rates.",
+      icon: Users,
+      color: "from-teal-500 to-teal-600",
+      bgColor: "bg-teal-50",
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-600",
+      borderColor: "border-teal-100",
+    },
+  ]
