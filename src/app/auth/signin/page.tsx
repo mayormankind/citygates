@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Briefcase, Heart } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -11,14 +10,16 @@ import React, { useEffect, useState } from 'react'
 
 export default function Signin() {
 
-  const searchParams = useSearchParams()
-  const initialTab = searchParams.get('tab') === 'admin' ? 'signin-as-admin' : 'signin-as-customer'
+  const [selectedTab, setSelectedTab] = useState('signin-as-customer');
 
-  const [selectedTab, setSelectedTab] = useState(initialTab)
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    setSelectedTab(initialTab)
-  }, [initialTab])
+    const tab = searchParams.get('tab');
+    if (tab === 'admin') {
+      setSelectedTab('signin-as-admin');
+    }
+  }, [searchParams]);
 
   return (
     <div className='w-full flex h-full min-h-screen bg-gradient-to-r from-[#5B1A68] via-purple-800 to-[#5B1A68] relative overflow-hidden'>
