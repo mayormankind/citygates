@@ -168,7 +168,7 @@
 
 export const dynamic = "force-dynamic";
 
-import SigninTabs from "@/components/layout/signinTabs";
+// import SigninTabs from "@/components/layout/signinTabs";
 import Image from "next/image";
 
 export default function Signin() {
@@ -189,7 +189,7 @@ export default function Signin() {
           />
         </div>
         <div className="flex flex-col space-y-6 p-8">
-          <SigninTabs />
+          {/* <SigninTabs /> */}
         </div>
       </div>
     </div>
