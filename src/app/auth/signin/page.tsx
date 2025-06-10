@@ -1,9 +1,10 @@
 "use client";
 
-// export const dynamic = "force-dynamic";
-
 import SigninTabs from "@/components/layout/signinTabs";
 import Image from "next/image";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 
 export default function Signin() {
   return (
@@ -15,7 +16,7 @@ export default function Signin() {
       <div className="m-auto w-full min-h-5/7 bg-white max-w-3xl grid md:grid-cols-2 rounded-md">
         <div className="w-full h-full">
           <Image
-            src={"/investment.jpg"}
+            src="/investment.jpg"
             className="w-full h-full object-cover rounded-md"
             width={1000}
             height={1000}
@@ -23,7 +24,9 @@ export default function Signin() {
           />
         </div>
         <div className="flex flex-col space-y-6 p-8">
-          <SigninTabs />
+          <Suspense fallback={<div>Loading...</div>}>
+            <SigninTabs />
+          </Suspense>
         </div>
       </div>
     </div>

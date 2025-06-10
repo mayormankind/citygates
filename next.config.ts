@@ -1,4 +1,13 @@
-import type { NextConfig } from "next";
+// import type { NextConfig } from "next";
+
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {
+//   experimental: {
+//     missingSuspenseWithCSRBailout: false,
+//   },
+// };
+
+// export default nextConfig;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,4 +16,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

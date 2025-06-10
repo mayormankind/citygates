@@ -9,12 +9,14 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function SigninTabs({ initialTab = "signin-as-customer" }) {
-  const searchParams = useSearchParams();
   const [selectedTab, setSelectedTab] = useState(initialTab);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const tab = searchParams.get("tab") === "admin" ? "signin-as-admin" : "signin-as-customer";
-    setSelectedTab(tab);
+    if (searchParams) {
+      const tab = searchParams.get("tab") === "admin" ? "signin-as-admin" : "signin-as-customer";
+      setSelectedTab(tab);
+    }
   }, [searchParams]);
 
   return (
@@ -22,7 +24,7 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
       <div className="w-fit flex flex-col mx-auto items-center">
         <div className="w-10 h-10">
           <Image
-            src={"/logo.jpeg"}
+            src="/logo.jpeg"
             width={1000}
             height={1000}
             alt="CityGates Logo"
@@ -57,7 +59,7 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
           <p className="text-center text-sm">
             New user?{" "}
             <span className="text-blue-700">
-              <Link href={"/auth/register"}>Register here.</Link>
+              <Link href="/auth/register">Register here.</Link>
             </span>
           </p>
         </div>
