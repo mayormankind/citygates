@@ -7,6 +7,7 @@ import { Suspense } from "react";
 export const dynamic = "force-dynamic";
 
 export default function Signin() {
+
   return (
     <div className="w-full flex h-full min-h-screen bg-gradient-to-r from-[#5B1A68] via-purple-800 to-[#5B1A68] relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">

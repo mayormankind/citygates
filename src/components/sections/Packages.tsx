@@ -7,17 +7,37 @@ import { Badge } from "@/components/ui/badge"
 import { packages } from '@/lib/globalConst';
 import Separator from "@/components/layout/separator"
 import { useRevealOnScroll } from "@/lib/useRevealOnScroll"
+import { useEffect, useState } from "react"
+import { Plan } from "@/lib/types"
+import { Crown, Loader2 } from "lucide-react"
+import { collection, onSnapshot } from "firebase/firestore"
+import { db } from "@/lib/firebaseConfig"
 
 
 export default function Packages() {
 
   const { sectionRef, isVisible, visibleCards } = useRevealOnScroll(packages.length, 150, true)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loading, setLoading] = useState(true)
+
+    // Fetch plans from Firestore
+
+  useEffect(() => {
+      // Real-time listener for plans
+      const unsubscribePlans = onSnapshot(collection(db, "plans"), (snapshot) => {
+        const plansData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+        })) as Plan[]
+        setPlans(plansData)
+        setLoading(false)
+      })
+      return () => unsubscribePlans()
+    }, [])
 
 
   return (
-    // <section ref={sectionRef}
-    //   className="w-full bg-gradient-to-br from-[#5B1A68] via-purple-800 to-[#5B1A68] py-24 px-6 relative overflow-hidden"
-    // >
     <section ref={sectionRef}
       className="w-full bg-gradient-to-br from-[#5B1A68]/70  via-purple-800 to-[#5B1A68] py-24 px-6 relative overflow-hidden"
     >
@@ -52,18 +72,24 @@ export default function Packages() {
 
         {/* Packages Grid */}
         <div className="grid gap-8 md:grid-cols-2 sm:grid-cols-1 max-w-5xl mx-auto">
-          {packages.map((pkg,index) => (
-            <Card
-              key={pkg.label}
-              className={`grid md:grid-cols-2 py-0 gap-0 group relative delay-[${index * 200}ms] overflow-hidden transition-all duration-500 transform ${
-                visibleCards.includes(index)
-                  ? "opacity-100 translate-y-0 scale-100"
-                  : "opacity-0 translate-y-10 scale-95"
-              } hover:scale-105 hover:shadow-2xl bg-white border ${pkg.borderColor} rounded-xl`}
-            >
-              {/* background overlay on hover */}
+          {loading ? (
+            <div className="col-span-2 text-center text-gray-500">
+              <Loader2 className="inline-block mr-2" />
+              Loading packages...
+            </div>
+          ) : (
+            plans.filter((pkg) => pkg.status === 'active').map((pkg,index) => (
+              <Card
+                key={pkg.name}
+                className={`grid md:grid-cols-2 py-0 gap-0 group relative delay-[${index * 200}ms] overflow-hidden transition-all duration-500 transform ${
+                  visibleCards.includes(index)
+                    ? "opacity-100 translate-y-0 scale-100"
+                    : "opacity-0 translate-y-10 scale-95"
+                } hover:scale-105 hover:shadow-2xl bg-white border border-purple-200 rounded-xl`}
+              >
+                {/* background overlay on hover */}
               <div
-                className={`absolute inset-0 bg-gradient-to-br ${pkg.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`}
+                className={`absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`}
               ></div>
 
               {/* Image section */}
@@ -71,23 +97,23 @@ export default function Packages() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10"></div>
                 <Image
                   src={pkg.image}
-                  alt={pkg.label}
+                  alt={pkg.name}
                   width={1000}
                   height={1000}
                   className="w-full h-60 object-cover group-hover:scale-110 transition-transform duration-500 rounded-l-md"
                 />
                 {/* Floating Icon */}
                 <div
-                  className={`absolute top-4 left-4 w-12 h-12 bg-gradient-to-r ${pkg.color} rounded-full flex items-center justify-center shadow-lg z-20`}
+                  className={`absolute top-4 left-4 w-12 h-12 bg-gradient-to-r from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-lg z-20`}
                 >
-                  <pkg.icon className="h-6 w-6 text-white" />
+                  <Crown className="h-6 w-6 text-white" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-4 p-4 md:p-6">
                 <CardHeader className="space-y-2 text-left p-0">
                   <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
-                    {pkg.label}
+                    {pkg.name}
                   </CardTitle>
                   <CardDescription className="leading-relaxed p-0 text-gray-500">
                     {pkg.description}
@@ -95,13 +121,14 @@ export default function Packages() {
                 </CardHeader>
                 <CardContent className="mt-auto pt-2 border-t">
                   <div className='w-full text-left'>
-                    <span className="text-3xl font-bold text-[#5B1A68]">{pkg.price}</span>
-                    <span className="ml-2 text-sm text-gray-500">{pkg.per}</span>
+                    <span className="text-3xl font-bold text-[#5B1A68]">₦{pkg.amount}</span>
+                    <span className="ml-2 text-sm text-gray-500">per day</span>
                   </div>
                 </CardContent>
               </div>
             </Card>
-          ))}
+          ))
+          )}
         </div>
       </div>
     </section>

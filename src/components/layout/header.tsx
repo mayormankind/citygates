@@ -25,8 +25,11 @@ export default function Header() {
     { label: 'FAQs', href: '/faqs' },
     { label: 'Contact', href: '/contacts' },
   ]
+
+    const path = usePathname();
   
-  const hideHeader = pathname === '/auth/register' || pathname === '/auth/signin' ? true : false;
+    const publicPaths = ['/', '/about', '/store-front', '/faqs', '/contacts'];
+    const hideHeader = !publicPaths.includes(path);
 
   return (
     <header className={`${hideHeader ? 'hidden' : 'block'} bg-white/80 backdrop-blur-md sticky top-0 border-b shadow-sm z-50 border-white/10`}>

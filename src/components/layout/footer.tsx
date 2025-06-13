@@ -10,8 +10,9 @@ export default function Footer() {
 
   const path = usePathname();
 
-  const authPaths = ['/auth/register', '/auth/signin'];
-  const hideFooter = authPaths.includes(path);
+  const publicPaths = ['/', '/about', '/store-front', '/faqs', '/contacts'];
+
+  const hideFooter = !publicPaths.includes(path);
 
 
   return (

@@ -1,16 +1,30 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseConfig";
+import { toast } from "sonner";
 
 export default function SigninTabs({ initialTab = "signin-as-customer" }) {
   const [selectedTab, setSelectedTab] = useState(initialTab);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const [adminData, setAdminData] = useState({
+    email: "",
+    password: ""
+  });
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAdminData({ ...adminData, [e.target.name]: e.target.value });
+  };
 
   useEffect(() => {
     if (searchParams) {
@@ -19,6 +33,31 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
     }
   }, [searchParams]);
 
+  const handleAdminSignin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    if (!adminData.email || !adminData.password) {
+      console.error("Email and password are required for admin sign-in.");
+      return;
+    }
+
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, adminData.email, adminData.password);
+        const user = userCredential.user;
+        router.push("/dashboard/admin");
+        toast("Admin signed in successfully!", {
+          description: `Welcome back, ${user.email}`,
+        });
+        setAdminData({ email: "", password: "" }); // Reset form data
+    } catch (err: any) {
+        toast.error("Admin sign-in failed.", {
+          description: err.message || "Please check your credentials and try again.",
+        });
+      setError("Login failed. Check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full space-y-6">
       <div className="w-fit flex flex-col mx-auto items-center">
@@ -64,10 +103,12 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
           </p>
         </div>
       </TabsContent>
-      <TabsContent value="signin-as-admin" id="admin" className="w-full flex flex-col space-y-4">
-        <Input placeholder="Enter your email" />
-        <Input placeholder="Enter your password" />
-        <Button>Signin</Button>
+      <TabsContent value="signin-as-admin" id="admin" className="w-full">
+        <form action="" onSubmit={handleAdminSignin} className="w-full flex flex-col space-y-4">
+          <Input placeholder="Enter your email" name="email" onChange={handleChange} value={adminData.email}/>
+          <Input placeholder="Enter your password" name="password" onChange={handleChange} value={adminData.password}/>
+          <Button>Signin</Button>
+        </form>
       </TabsContent>
     </Tabs>
   );
