@@ -39,10 +39,7 @@ export default function Branches() {
   }, [])
 
   const filteredBranches = branches.filter((branch) =>
-      branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      branch.amount.toString().includes(searchTerm.toLowerCase()) ||
-      branch.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      branch.status.toLowerCase().includes(searchTerm.toLowerCase())
+      branch.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleBranchStatusChange = async (branchId: string, newStatus: 'active' | 'inactive') => {
