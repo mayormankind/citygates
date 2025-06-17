@@ -7,17 +7,17 @@ import { Input } from '../ui/input'
 import { toast } from 'sonner'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
-import { Plan } from '@/lib/types'
+import { Store } from '@/lib/types'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { uploadToCloudinary } from '@/lib/cloudinary'
 
 
-interface AddPlanModalProps {
+interface AddStoreModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  Plans: Plan[]
+  Stores: Store[]
 }
-export default function AddPlanModal({ open, onOpenChange, Plans }: AddPlanModalProps) {
+export default function AddStoreModal({ open, onOpenChange, Stores }: AddStoreModalProps) {
     const [loading, setLoading] = useState(false)
 
     const [formData, setFormData] = useState({
@@ -35,7 +35,7 @@ export default function AddPlanModal({ open, onOpenChange, Plans }: AddPlanModal
 
         try {
         setLoading(true)
-        const { url } = await uploadToCloudinary(file, "plans")
+        const { url } = await uploadToCloudinary(file, "store")
         setFormData({ ...formData, image: url })
         toast("Image uploaded",{
             description: "Profile image has been uploaded successfully.",
@@ -55,7 +55,7 @@ export default function AddPlanModal({ open, onOpenChange, Plans }: AddPlanModal
 
     try {
 
-      const classData = {
+      const StoreData = {
         image: formData.image,
         name: formData.name,
         amount: formData.amount,
@@ -66,20 +66,20 @@ export default function AddPlanModal({ open, onOpenChange, Plans }: AddPlanModal
       }
 
 
-      const docRef = await addDoc(collection(db, "plans"), classData)
+      const docRef = await addDoc(collection(db, "store"), StoreData)
 
       // Create notification
     //   await notifyClassCreated(formData.name, docRef.id) 
 
-      toast("Plan created", {
-        description: "The Plan has been successfully created.",
+      toast("Store created", {
+        description: "The store has been successfully created.",
       })
 
       setFormData({ image: "", name: "", amount: "", tenure: "", description: "", status: "inactive" })
       onOpenChange(false)
     } catch (error) {
       toast.error("Error", {
-        description: "Failed to create the plan.",
+        description: "Failed to create the store.",
       })
     } finally {
       setLoading(false)

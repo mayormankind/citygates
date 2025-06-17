@@ -12,14 +12,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from '@/components/ui/textarea'
+import { State } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
-
-interface State {
-  name: string,
-  lgas: string[],
-}
 
 export default function Register() {
 
