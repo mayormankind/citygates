@@ -11,11 +11,10 @@ export interface Plan {
 
 export interface Store {
     id: string
-    name: string
-    amount: number
     image: string
+    name: string
+    price: number
     status: string
-    tenure: number
     description: string
     createdAt: Date
 }
@@ -33,6 +32,20 @@ export interface Prospect {
     status: string
     tenure: number
     description: string
+    createdAt: Date
+}
+
+export interface User {
+    id: string
+    name: string
+    phoneNumber: number
+    state: string
+    lga: string
+    address: string
+    branch?: string
+    status: string
+    kyc: string
+    admins: number
     createdAt: Date
 }
 

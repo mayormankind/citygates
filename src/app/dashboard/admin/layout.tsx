@@ -43,7 +43,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="flex h-screen bg-gray-50">
         <Sidebar />
         <div className="flex-1 md:ml-64 flex flex-col">
-            <DashboardHeader/>
+            {/* <DashboardHeader/> */}
             <main className="flex-1 overflow-auto">
               <div className="p-6">
                 <BreadcrumbNav />
