@@ -128,7 +128,7 @@ export default function AddUserModal({ open, onOpenChange, Users }: AddUserModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] h-full max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>
           <DialogDescription>Create a new CityGates User.</DialogDescription>

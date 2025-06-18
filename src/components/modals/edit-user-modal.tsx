@@ -20,7 +20,7 @@ const editUserSchema = z.object({
   lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50, 'Last name is too long'),
   state: z.string().min(1, 'Please select a state'),
   lga: z.string().min(1, 'Please select a local government area'),
-  address: z.string().min(5, 'Street address must be at least 5 characters').max(200, 'Street address is too long'),
+  streetAddress: z.string().min(5, 'Street address must be at least 5 characters').max(200, 'Street address is too long'),
 });
 
 type FormData = z.infer<typeof editUserSchema>;
@@ -51,7 +51,7 @@ export default function EditUserModal({ open, onOpenChange, user }: EditUserModa
       lastName: user.name.split(' ')[1] || '', // Extract last name from full name
       state: user.state || '',
       lga: user.lga || '',
-      address: user.address || '',
+      streetAddress: user.streetAddress || '',
     },
   });
 
@@ -90,7 +90,7 @@ export default function EditUserModal({ open, onOpenChange, user }: EditUserModa
         name: `${data.firstName} ${data.lastName}`,
         state: data.state,
         lga: data.lga,
-        address: data.address,
+        streetAddress: data.streetAddress,
       });
 
       toast.success('User updated', {
@@ -102,7 +102,7 @@ export default function EditUserModal({ open, onOpenChange, user }: EditUserModa
         lastName: data.lastName,
         state: data.state,
         lga: data.lga,
-        address: data.address,
+        streetAddress: data.streetAddress,
       });
       onOpenChange(false);
     } catch (error) {
@@ -117,7 +117,7 @@ export default function EditUserModal({ open, onOpenChange, user }: EditUserModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] h-full max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>Update the details of the selected user.</DialogDescription>
@@ -210,10 +210,10 @@ export default function EditUserModal({ open, onOpenChange, user }: EditUserModa
               id="address"
               placeholder="Street Address"
               className="shadow-none"
-              {...register('address')}
+              {...register('streetAddress')}
               disabled={loading}
             />
-            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
+            {errors.streetAddress && <p className="text-red-500 text-xs mt-1">{errors.streetAddress.message}</p>}
           </div>
 
           <Button type="submit" disabled={loading}>

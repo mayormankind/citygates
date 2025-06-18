@@ -1,60 +1,96 @@
-"use client"
-import { app, db } from '@/lib/firebaseConfig'
-
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Delete, Edit, Loader2, Pause, Play, Plus, Search, Trash2 } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
-import AddPlanModal from '@/components/modals/add-plan-modal'
-import Image from 'next/image'
-import { Plan } from '@/lib/types'
-import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
-import AddBranchModal from '@/components/modals/add-branch-modal'
-
+"use client";
+import { app, db } from '@/lib/firebaseConfig';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Edit, Loader2, Plus, Search, Trash2 } from 'lucide-react'; // Removed unused Delete, Pause, Play
+import React, { useEffect, useState } from 'react';
+import AddBranchModal from '@/components/modals/add-branch-modal';
+import Image from 'next/image';
+import { Plan } from '@/lib/types';
+import { collection, doc, onSnapshot, updateDoc, deleteDoc } from 'firebase/firestore'; // Added deleteDoc
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog'; // Added Dialog components
+import EditBranchModal from '@/components/modals/edit-branch-modal';
 
 export default function Branches() {
-
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [branches, setBranches] = useState<Plan[]>([])
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false); // State for delete confirmation
+  const [selectedBranch, setSelectedBranch] = useState<Plan | null>(null); // Branch to edit or delete
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [branches, setBranches] = useState<Plan[]>([]);
 
   useEffect(() => {
-    // Real-time listener for branches
     const unsubscribeBranches = onSnapshot(collection(db, "branches"), (snapshot) => {
       const branchesData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as Plan[]
-      setBranches(branchesData)
-      setLoading(false)
-    })
-    return () => unsubscribeBranches()
-  }, [])
+      })) as Plan[];
+      setBranches(branchesData);
+      setLoading(false);
+    });
+    return () => unsubscribeBranches();
+  }, []);
 
   const filteredBranches = branches.filter((branch) =>
-      branch.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    branch.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleBranchStatusChange = async (branchId: string, newStatus: 'active' | 'inactive') => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const branchRef = doc(db, "branches", branchId)
-      await updateDoc(branchRef, { status: newStatus })
-      toast.success(`Branch ${newStatus} successfully!`)
+      const branchRef = doc(db, "branches", branchId);
+      await updateDoc(branchRef, { status: newStatus });
+      toast.success(`Branch ${newStatus} successfully!`);
     } catch (error) {
-      console.error("Error updating branch status:", error)
-      toast.error("Failed to update branch status.")
+      console.error("Error updating branch status:", error);
+      toast.error("Failed to update branch status.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  const handleEdit = (branchId: string) => {
+    const branchToEdit = branches.find((b) => b.id === branchId);
+    if (branchToEdit) {
+      setSelectedBranch(branchToEdit);
+      setShowEditModal(true);
+    } else {
+      toast.error("Branch not found.");
+    }
+  };
+
+  const handleDelete = async (branchId: string) => {
+    setLoading(true);
+    try {
+      const branchRef = doc(db, "branches", branchId);
+      await deleteDoc(branchRef);
+      toast.success("Branch deleted", {
+        description: "The branch has been successfully deleted.",
+      });
+      setShowDeleteDialog(false); 
+      setSelectedBranch(null);
+    } catch (error) {
+      console.error("Error deleting branch:", error);
+      toast.error("Failed to delete branch", {
+        description: "An error occurred while deleting the branch.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 p-4 md:px-8">
@@ -93,8 +129,8 @@ export default function Branches() {
               <TableRow>
                 <TableHead className="w-1/4">S/N</TableHead>
                 <TableHead className="w-1/4">Branch Name</TableHead>
-                <TableHead className="w-1/4">Created At</TableHead>  
-                <TableHead className="w-1/4">Actions</TableHead>  
+                <TableHead className="w-1/4">Created At</TableHead>
+                <TableHead className="w-1/4">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,7 +163,8 @@ export default function Branches() {
                           className="bg-blue-600 text-white"
                           variant="ghost"
                           title="Edit Branch"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => handleEdit(branch.id)}
+                          disabled={loading}
                         >
                           <Edit aria-label="Edit Branch" className="h-4 w-4" />
                         </Button>
@@ -135,29 +172,14 @@ export default function Branches() {
                           className="bg-red-600 text-white"
                           variant="ghost"
                           title="Delete Branch"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => {
+                            setSelectedBranch(branch);
+                            setShowDeleteDialog(true);
+                          }}
+                          disabled={loading}
                         >
                           <Trash2 aria-label="Delete Branch" className="h-4 w-4" />
                         </Button>
-                        {branch.status === 'active' ? (
-                          <Button
-                            className="bg-red-500 text-white"
-                            variant="ghost"
-                            title="Pause Branch"
-                            onClick={() => handleBranchStatusChange(branch.id, 'inactive')}
-                          >
-                            <Pause aria-label="Pause Branch" className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            className="bg-green-700 text-white"
-                            variant="ghost"
-                            title="Resume Branch"
-                            onClick={() => handleBranchStatusChange(branch.id, 'active')}
-                          >
-                            <Play aria-label="Resume Branch" className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -169,6 +191,42 @@ export default function Branches() {
       </Card>
 
       {showAddModal && <AddBranchModal open={showAddModal} onOpenChange={setShowAddModal} Branches={[]} />}
+      {showEditModal && selectedBranch && (
+        <EditBranchModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          branch={selectedBranch}
+        />
+      )}
+      {showDeleteDialog && selectedBranch && (
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the branch "{selectedBranch.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDelete(selectedBranch.id)}
+                disabled={loading}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
-  )
+  );
 }

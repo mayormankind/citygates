@@ -40,12 +40,6 @@ const userSchema = z.object({
 
 type FormData = z.infer<typeof userSchema>;
 
-interface AddUserModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  Users: User[];
-}
-
 export default function Register() {
 
   const [loading, setLoading] = useState(false);

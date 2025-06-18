@@ -23,7 +23,7 @@ export default function Prospects() {
 
   useEffect(() => {
     // Real-time listener for branches
-    const unsubscribeStores = onSnapshot(collection(db, "stores"), (snapshot) => {
+    const unsubscribeStores = onSnapshot(collection(db, "prospects"), (snapshot) => {
       const ProspectsData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),

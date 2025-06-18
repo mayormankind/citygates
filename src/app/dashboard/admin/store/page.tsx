@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Edit, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Store } from "@/lib/types";
-import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import AddStoreModal from "@/components/modals/add-store-modal";
@@ -14,6 +14,14 @@ import { Switch } from "@/components/ui/switch";
 import EditStoreModal from "@/components/modals/edit-store-modal";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 
 export default function Stores() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -22,6 +30,7 @@ export default function Stores() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [stores, setStores] = useState<Store[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     const unsubscribeStores = onSnapshot(collection(db, "stores"), (snapshot) => {
@@ -61,6 +70,26 @@ export default function Stores() {
     } catch (error) {
       console.error("Error updating store status:", error);
       toast.error("Failed to update store status.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteStore = async (storeId: string) => {
+    setLoading(true);
+    try {
+      const storeRef = doc(db, "stores", storeId);
+      await deleteDoc(storeRef);
+      toast.success("Store deleted", {
+        description: "The store has been successfully deleted.",
+      });
+      setShowDeleteDialog(false); // Close dialog after deletion
+      setSelectedStore(null); // Clear selected store
+    } catch (error) {
+      console.error("Error deleting store:", error);
+      toast.error("Failed to delete store", {
+        description: "An error occurred while deleting the store.",
+      });
     } finally {
       setLoading(false);
     }
@@ -142,7 +171,7 @@ export default function Stores() {
                     </TableCell>
                     <TableCell>{store.price}</TableCell>
                     <TableCell>
-                      <Badge>{store.status}</Badge>
+                      <Badge className={`capitalize ${store.status === 'active' ? 'bg-green-100 text-green-800' : store.status === 'inactive' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>{store.status}</Badge>
                     </TableCell>
                     <TableCell>{store.description}</TableCell>
                     <TableCell>
@@ -160,7 +189,10 @@ export default function Stores() {
                           className="bg-red-600 text-white"
                           variant="ghost"
                           title="Delete Store"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => {
+                            setSelectedStore(store);
+                            setShowDeleteDialog(true);
+                          }}
                           disabled={loading}
                         >
                           <Trash2 aria-label="Delete Store" className="h-4 w-4" />
@@ -185,6 +217,35 @@ export default function Stores() {
         />
       )}
 
+      {showDeleteDialog && selectedStore && (
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the store "{selectedStore.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteStore(selectedStore.id)}
+                disabled={loading}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
     </div>
   );

@@ -126,7 +126,7 @@ export default function AddPlanModal({ open, onOpenChange, Plans }: AddPlanModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] h-full max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Plan</DialogTitle>
           <DialogDescription>Create a new subscription plan.</DialogDescription>

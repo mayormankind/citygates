@@ -13,6 +13,7 @@ export interface Store {
     id: string
     image: string
     name: string
+    // visibility: string
     price: number
     status: string
     description: string
@@ -38,11 +39,13 @@ export interface Prospect {
 export interface User {
     id: string
     name: string
+    email: string
     phoneNumber: number
     state: string
     lga: string
-    address: string
+    streetAddress: string
     branch?: string
+    role: string
     status: string
     kyc: string
     admins: number
