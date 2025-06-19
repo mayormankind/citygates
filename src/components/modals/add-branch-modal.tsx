@@ -7,15 +7,14 @@ import { Input } from '../ui/input'
 import { toast } from 'sonner'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
-import { Branches } from '@/lib/types'
+import { Branch } from '@/lib/types'
 
 
 interface AddBranchModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  Branches: Branches[]
 }
-export default function AddBranchModal({ open, onOpenChange, Branches }: AddBranchModalProps) {
+export default function AddBranchModal({ open, onOpenChange}: AddBranchModalProps) {
     const [loading, setLoading] = useState(false)
 
     const [formData, setFormData] = useState({

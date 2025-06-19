@@ -190,7 +190,7 @@ export default function Branches() {
         </CardContent>
       </Card>
 
-      {showAddModal && <AddBranchModal open={showAddModal} onOpenChange={setShowAddModal} Branches={[]} />}
+      {showAddModal && <AddBranchModal open={showAddModal} onOpenChange={setShowAddModal} />}
       {showEditModal && selectedBranch && (
         <EditBranchModal
           open={showEditModal}
