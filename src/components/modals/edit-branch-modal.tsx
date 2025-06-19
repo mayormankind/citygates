@@ -7,7 +7,7 @@ import { Input } from '../ui/input';
 import { toast } from 'sonner';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
-import { Branches } from '@/lib/types';
+import { Branch } from '@/lib/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -22,7 +22,7 @@ type FormData = z.infer<typeof editBranchSchema>;
 interface EditBranchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  branch: Branches; // Pass the branch object to edit
+  branch: Branch; // Pass the branch object to edit
 }
 
 export default function EditBranchModal({ open, onOpenChange, branch }: EditBranchModalProps) {
