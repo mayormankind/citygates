@@ -10,6 +10,8 @@ import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { PasswordInput } from "../ui/password-input";
 
 export default function SigninTabs({ initialTab = "signin-as-customer" }) {
   const [selectedTab, setSelectedTab] = useState(initialTab);
@@ -38,6 +40,7 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
     setIsLoading(true);
     if (!adminData.email || !adminData.password) {
       console.error("Email and password are required for admin sign-in.");
+      toast.error("Email and password are required for admin sign-in.")
       return;
     }
 
@@ -94,7 +97,11 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
             <h3>+234</h3>
             <Input placeholder="Enter your phone number." />
           </div>
-          <Button>Send OTP</Button>
+          <Button>
+            {isLoading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Sending ...</>
+            ): ( 'Send OTP')}
+          </Button>
           <p className="text-center text-sm">
             New user?{" "}
             <span className="text-blue-700">
@@ -106,8 +113,12 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
       <TabsContent value="signin-as-admin" id="admin" className="w-full">
         <form action="" onSubmit={handleAdminSignin} className="w-full flex flex-col space-y-4">
           <Input placeholder="Enter your email" name="email" onChange={handleChange} value={adminData.email}/>
-          <Input placeholder="Enter your password" name="password" onChange={handleChange} value={adminData.password}/>
-          <Button>Signin</Button>
+          <PasswordInput placeholder="Enter your password" name="password" onChange={handleChange} value={adminData.password}/>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Submitting ...</>
+            ): ( 'Signin')} 
+          </Button>
         </form>
       </TabsContent>
     </Tabs>

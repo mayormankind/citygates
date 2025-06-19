@@ -7,7 +7,7 @@ import { Edit, Loader2, Plus, Search, Trash2 } from 'lucide-react'; // Removed u
 import React, { useEffect, useState } from 'react';
 import AddBranchModal from '@/components/modals/add-branch-modal';
 import Image from 'next/image';
-import { Plan } from '@/lib/types';
+import { Branch } from '@/lib/types';
 import { collection, doc, onSnapshot, updateDoc, deleteDoc } from 'firebase/firestore'; // Added deleteDoc
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -26,10 +26,10 @@ export default function Branches() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false); // State for delete confirmation
-  const [selectedBranch, setSelectedBranch] = useState<Plan | null>(null); // Branch to edit or delete
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null); // Branch to edit or delete
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
-  const [branches, setBranches] = useState<Plan[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
 
   useEffect(() => {
     const unsubscribeBranches = onSnapshot(collection(db, "branches"), (snapshot) => {
@@ -37,7 +37,7 @@ export default function Branches() {
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as Plan[];
+      })) as Branch[];
       setBranches(branchesData);
       setLoading(false);
     });

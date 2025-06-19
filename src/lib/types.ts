@@ -1,3 +1,5 @@
+import { FieldValue } from "firebase/firestore"
+
 export interface Plan {
     id: string
     name: string
@@ -52,8 +54,26 @@ export interface User {
     createdAt: Date
 }
 
-export interface Branches {
+export interface Branch {
     id: string
     name: string
     createdAt: Date
+}
+
+export interface Admin {
+  id: string;
+  email: string;
+  phoneNumber: string;
+  role: string;
+  branch: string;
+  status: string;
+  createdAt: Date | FieldValue;
+  uid: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
+  createdAt: Date;
 }
