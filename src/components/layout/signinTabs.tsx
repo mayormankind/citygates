@@ -48,7 +48,7 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
         const userCredential = await signInWithEmailAndPassword(auth, adminData.email, adminData.password);
         const user = userCredential.user;
         router.push("/dashboard/admin");
-        toast("Admin signed in successfully!", {
+        toast.success("Admin signed in successfully!", {
           description: `Welcome back, ${user.email}`,
         });
         setAdminData({ email: "", password: "" }); // Reset form data

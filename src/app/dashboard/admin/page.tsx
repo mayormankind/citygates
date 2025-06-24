@@ -23,7 +23,7 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { User } from "@/lib/types";
+import { Admin, User } from "@/lib/types";
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -44,7 +44,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [adminsList, setAdminsList] = useState<User[]>([]); // List of available admins
+  const [adminsList, setAdminsList] = useState<Admin[]>([]); // List of available admins
 
   useEffect(() => {
     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
@@ -54,12 +54,31 @@ export default function UsersPage() {
         createdAt: doc.data().createdAt?.toDate() || new Date(),
       })) as User[];
       setUsers(UsersData);
-      // Filter admins (e.g., users with role 'admin')
-      setAdminsList(UsersData.filter((u) => u.role === "admin"));
       setLoading(false);
     });
     return () => unsubscribeUsers();
   }, []);
+
+  // Fetch admins
+  useEffect(() => {
+    setLoading(true);
+    const unsubscribeAdmins = onSnapshot(collection(db, "admins"),(snapshot) => {
+      const adminsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      })) as Admin[];
+      setAdminsList(adminsData);
+      setLoading(false);
+    },
+    (error) => {
+      console.error("Error fetching admins:", error);
+      toast.error("Failed to load admins.");
+      setLoading(false);
+    }
+  );
+  return () => unsubscribeAdmins();
+}, []);
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -142,12 +161,12 @@ export default function UsersPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:px-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">Users</h1>
           <p className="text-gray-600 m-0">Manage your users here. You can view, edit, and delete users information.</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 mt-4 md:mt-0">
           <Button onClick={() => setShowAddModal(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add New User

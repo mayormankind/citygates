@@ -5,14 +5,14 @@ import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
-import { User } from '@/lib/types';
+import { Admin, User } from '@/lib/types';
 import { toast } from 'sonner';
 
 interface ManageAdminsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User;
-  adminsList: User[];
+  adminsList: Admin[];
   onAdminsUpdate: () => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
@@ -73,7 +73,7 @@ export default function ManageAdminsModal({ open, onOpenChange, user, adminsList
                   .filter((admin) => !selectedAdmins.includes(admin.id))
                   .map((admin) => (
                     <SelectItem key={admin.id} value={admin.id}>
-                      {admin.name}
+                      {admin.email}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -83,7 +83,7 @@ export default function ManageAdminsModal({ open, onOpenChange, user, adminsList
                 const admin = adminsList.find((a) => a.id === adminId);
                 return admin ? (
                   <span key={adminId} className="inline-block bg-gray-200 rounded-full px-2 py-1 mr-1 mb-1">
-                    {admin.name} <button onClick={() => setSelectedAdmins(selectedAdmins.filter((id) => id !== adminId))} className="ml-1 text-red-500">x</button>
+                    {admin.email} <button onClick={() => setSelectedAdmins(selectedAdmins.filter((id) => id !== adminId))} className="ml-1 text-red-500">x</button>
                   </span>
                 ) : null;
               })}

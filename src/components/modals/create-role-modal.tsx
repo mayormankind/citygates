@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { Checkbox } from '../ui/checkbox';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Branch } from '@/lib/types';
+
 
 // Define permissions grouped by categories
 const permissionCategories = {
@@ -29,7 +32,23 @@ interface CreateRoleModalProps {
 export default function CreateRoleModal({ open, onOpenChange }: CreateRoleModalProps) {
   const [roleName, setRoleName] = useState('');
   const [roleType, setRoleType] = useState<'General' | 'Branch' | 'Assigned'>('General');
+  const [branchId, setBranchId] = useState(''); 
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  
+  useEffect(() => {
+    const unsubscribeBranches = onSnapshot(collection(db, "branches"), (snapshot) => {
+      const branchesData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      })) as Branch[];
+      setBranches(branchesData);
+      setLoading(false);
+    });
+    return () => unsubscribeBranches();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,10 +60,14 @@ export default function CreateRoleModal({ open, onOpenChange }: CreateRoleModalP
       await addDoc(collection(db, 'roles'), {
         name: roleName,
         permissions: selectedPermissions,
+        roleType,
+        branchId: roleType === 'Branch' ? branchId : null,
         createdAt: serverTimestamp(),
       });
       toast.success('Role created successfully!');
       setRoleName('');
+      setRoleType('General');
+      setBranchId('');
       setSelectedPermissions([]);
       onOpenChange(false);
     } catch (error) {
@@ -106,6 +129,30 @@ export default function CreateRoleModal({ open, onOpenChange }: CreateRoleModalP
               ))}
             </div>
           </div>
+          {roleType === 'Branch' && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Select Branch</label>
+              <Select value={branchId} onValueChange={setBranchId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Branches</SelectLabel>
+                    {branches.length > 0 ? (
+                      branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          {branch.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-2 text-sm text-gray-500">Loading branches...</div>
+                    )}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-700">
               Select Permissions

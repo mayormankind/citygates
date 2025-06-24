@@ -55,12 +55,12 @@ export default function Prospects() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:px-8">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between flex-col md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">Prospects</h1>
           <p className="text-gray-600 m-0">Manage your prospects here. You can view, edit, and delete prospect information.</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 mt-4 md:mt-0">
           <Button onClick={() => setShowAddModal(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add New Prospect
