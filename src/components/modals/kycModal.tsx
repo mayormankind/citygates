@@ -319,7 +319,7 @@ import { auth } from '@/lib/firebaseConfig'; // Assumes Firebase Auth is set up
 
 interface Bank {
   name: string;
-  code: string; // Required for verification
+  code: string;
 }
 
 interface AccountDetails {
@@ -496,7 +496,7 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
         bankName: kycForm.accountDetails.Bank_name,
         accountNumber: kycForm.accountDetails.account_number,
         accountName: kycForm.accountDetails.account_name,
-        bankCode: kycForm.accountDetails.bank_code,
+        // bankCode: kycForm.accountDetails.bank_code,
       });
       await addDoc(collection(db, 'kyc_audits'), {
         userId: user.id,
@@ -632,7 +632,7 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
               <p><strong>Account Name:</strong> {kycForm.accountDetails.account_name}</p>
               <p><strong>Bank Name:</strong> {kycForm.accountDetails.Bank_name}</p>
               <p><strong>Account Number:</strong> {kycForm.accountDetails.account_number}</p>
-              <p><strong>Bank Code:</strong> {kycForm.accountDetails.bank_code}</p>
+              {/* <p><strong>Bank Code:</strong> {kycForm.accountDetails.bank_code}</p> */}
             </div>
           )}
           <Button

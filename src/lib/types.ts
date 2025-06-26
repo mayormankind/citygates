@@ -27,14 +27,30 @@ export interface State {
   lgas: string[],
 }
 
+// export interface Prospect {
+//     id: string
+//     name: string
+//     amount: number
+//     image: string
+//     status: string
+//     tenure: number
+//     description: string
+//     createdAt: Date
+// }
+
 export interface Prospect {
     id: string
     name: string
-    amount: number
-    image: string
+    email: string
+    phoneNumber: number
+    state: string
+    lga: string
+    streetAddress: string
+    branch?: string
+    role: string
     status: string
-    tenure: number
-    description: string
+    kyc: string
+    admins: number
     createdAt: Date
 }
 

@@ -4,22 +4,23 @@ import { db } from '@/lib/firebaseConfig'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Edit, Loader2, Pause, Play, Plus, Search, Trash2 } from 'lucide-react'
+import { Check, Loader2, Search } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { Store } from '@/lib/types'
-import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore'
+import { Prospect } from '@/lib/types'
+import { collection, onSnapshot } from 'firebase/firestore'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import AddStoreModal from '@/components/modals/add-store-modal'
 import AddProspectModal from '@/components/modals/add-prospect-modal'
 
 export default function Prospects() {
 
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
-  const [ prospects, setProspects ] = useState<Store[]>([])
+  const [ prospects, setProspects ] = useState<Prospect[]>([])
+  const [selectedUser, setSelectedUser] = useState<Prospect | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  
+  
 
   useEffect(() => {
     // Real-time listener for branches
@@ -28,7 +29,7 @@ export default function Prospects() {
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as Store[]
+      })) as Prospect[]
       setProspects(ProspectsData)
       setLoading(false)
     })
@@ -39,19 +40,10 @@ export default function Prospects() {
       prospect.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleProspectStatusChange = async (prospectId: string, newStatus: 'active' | 'inactive') => {
-    setLoading(true)
-    try {
-      const prospectRef = doc(db, "prospects", prospectId)
-      await updateDoc(prospectRef, { status: newStatus })
-      toast.success(`Prospect ${newStatus} successfully!`)
-    } catch (error) {
-      console.error("Error updating prospect status:", error)
-      toast.error("Failed to update prospect status.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const handleEditProfile = (prospect: Prospect) => {
+    setSelectedUser(prospect);
+    setShowEditModal(true);
+  };
 
   return (
     <div className="flex flex-col gap-8 p-4 md:px-8">
@@ -60,12 +52,12 @@ export default function Prospects() {
           <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">Prospects</h1>
           <p className="text-gray-600 m-0">Manage your prospects here. You can view, edit, and delete prospect information.</p>
         </div>
-        <div className="flex space-x-2 mt-4 md:mt-0">
+        {/* <div className="flex space-x-2 mt-4 md:mt-0">
           <Button onClick={() => setShowAddModal(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add New Prospect
           </Button>
-        </div>
+        </div> */}
       </div>
 
       <Card>
@@ -126,37 +118,10 @@ export default function Prospects() {
                           className="bg-blue-600 text-white"
                           variant="ghost"
                           title="Edit Prospect"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => handleEditProfile(prospect)}
                         >
-                          <Edit aria-label="Edit Store" className="h-4 w-4" />
+                          <Check aria-label="Edit Store" className="h-4 w-4" />
                         </Button>
-                        <Button
-                          className="bg-red-600 text-white"
-                          variant="ghost"
-                          title="Delete Prospect"
-                          onClick={() => setShowEditModal(true)}
-                        >
-                          <Trash2 aria-label="Delete Store" className="h-4 w-4" />
-                        </Button>
-                        {prospect.status === 'active' ? (
-                          <Button
-                            className="bg-red-500 text-white"
-                            variant="ghost"
-                            title="Pause Prospect"
-                            onClick={() => handleProspectStatusChange(prospect.id, 'inactive')}
-                          >
-                            <Pause aria-label="Pause Prospect" className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            className="bg-green-700 text-white"
-                            variant="ghost"
-                            title="Resume Prospect"
-                            onClick={() => handleProspectStatusChange(prospect.id, 'active')}
-                          >
-                            <Play aria-label="Resume Prospect" className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -167,7 +132,12 @@ export default function Prospects() {
         </CardContent>
       </Card>
 
-      {showAddModal && <AddProspectModal open={showAddModal} onOpenChange={setShowAddModal} Prospects={[]} />}
+      {showEditModal && selectedUser && (
+        <AddProspectModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          user={selectedUser}/>
+      )}
     </div>
   )
 }

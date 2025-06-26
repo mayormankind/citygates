@@ -2,26 +2,8 @@
 import { db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Edit,
-  Loader2,
-  Plus,
-  Search,
-  MessageSquare,
-  Users,
-  DollarSign,
-  Lock,
-  BadgeCheck,
-  ThumbsUp,
-} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Edit, Loader2, Plus, Search, MessageSquare, Users, DollarSign, Lock, BadgeCheck, ThumbsUp } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Admin, User } from "@/lib/types";
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
@@ -141,6 +123,7 @@ export default function UsersPage() {
   const handleSendMessage = (userId: string) => {
     console.log("Send message to user:", userId);
   };
+  
   const handleEditProfile = (userId: string) => {
     const userToEdit = users.find((u) => u.id === userId);
     if (userToEdit) {

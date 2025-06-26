@@ -13,6 +13,8 @@ import { useForm, Controller } from 'react-hook-form'; // Updated to use Control
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { PasswordInput } from '../ui/password-input';
+import { sendEmail } from '@/lib/sendmail';
 
 const adminSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -100,6 +102,11 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const uid = userCredential.user.uid;
 
+      const emailResponse = await sendEmail(data.email, {
+        subject: 'City Gates Bank Admin',
+        text: `You have been successfully registered as a Citygates Food Bank Admin. Your password to sign in at any time is ${data.password}.`
+      })
+
       const adminData: Omit<Admin, 'id'> = {
         email: data.email,
         phoneNumber: `+234${data.phoneNumber}`,
@@ -113,15 +120,26 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
       await addDoc(collection(db, 'admins'), adminData);
 
       toast.success('Admin created', {
-        description: 'The admin has been successfully created and can log in with the provided credentials.',
+        description: `The admin has been successfully created ${emailResponse.success ? ' (mock email sent)' : ' and an email notification was sent'}.`,
       });
+
+      toast.success('Admin created', {
+        description: 'The admin has been successfully created and an email notification was sent.',
+      });
+
 
       reset();
       onOpenChange(false);
-    } catch (error) {
-      console.error('Submission error:', error);
+    } catch (error: any) {
+      console.error('Submission error:', {
+        message: error.message,
+        code: error.code,
+        details: error.response?.data,
+      });
       toast.error('Error creating admin', {
-        description: (error as any)?.message || 'Failed to create the admin. Please try again.',
+        description: error.message.includes('CORS') 
+          ? 'Email sending failed due to CORS. Admin created successfully.' 
+          : error.message || 'Failed to create the admin. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -165,7 +183,7 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
 
           <div className="space-y-1">
             <Label htmlFor="password">Choose password for admin</Label>
-            <Input
+            <PasswordInput
               id="password"
               type="password"
               placeholder="Enter Password"
@@ -177,7 +195,7 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
 
           <div className="space-y-1">
             <Label htmlFor="confirmPassword">Re-Enter password</Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
               type="password"
               placeholder="Re-Enter Password"

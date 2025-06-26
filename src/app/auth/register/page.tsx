@@ -113,10 +113,10 @@ export default function Register() {
         streetAddress: data.streetAddress,
       };
 
-      await addDoc(collection(db, 'users'), storeData);
+      await addDoc(collection(db, 'prospects'), storeData);
 
-      toast.success('User created', {
-        description: 'The user has been successfully created.',
+      toast.success('Account created', {
+        description: 'Your account has been successfully created. Await verification and approval!',
       });
 
       reset();
