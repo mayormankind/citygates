@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -16,7 +17,7 @@ import { db } from '@/lib/firebaseConfig'
 import { State, User } from '@/lib/types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { Loader2 } from 'lucide-react'
+import { CheckCircle, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
@@ -45,6 +46,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [states, setStates] = useState<State[]>([]);
   const [selectedState, setSelectedState] = useState('');
+  const [successModal, setSuccessModal] = useState(false);
 
   // Initialize react-hook-form with Zod resolver
   const {
@@ -118,6 +120,8 @@ export default function Register() {
       toast.success('Account created', {
         description: 'Your account has been successfully created. Await verification and approval!',
       });
+
+      setSuccessModal(true);
 
       reset();
     } catch (error) {
@@ -285,12 +289,32 @@ export default function Register() {
                   Submitting...
                 </>
               ) : (
-                'Finish Onboarding User'
+                'Continue'
               )}
             </Button>
           </form>
         </section>
       </div>
+
+      {successModal && (
+        <Dialog open={successModal} onOpenChange={setSuccessModal}>
+          <DialogContent className='max-w-md h-full max-h-[70vh]'>
+            <div className="flex flex-col gap-8">
+              <Link href={'/'}>
+                <div className="w-fit flex flex-col mx-auto items-center">
+                  <div className="w-10 h-10"> 
+                    <Image src={'/logo.jpeg'} width={1000} height={1000} alt='CityGates Logo' className='h-full'/>
+                  </div>
+                  <h2 className='text-2xl font-bold'>CityGates Food Bank</h2>
+                </div>
+              </Link>
+              <CheckCircle className='bg-green-200 text-green-600 animate-pulse transition-all duration-150'/>
+              <p className='leading-4 font-medium text-black'>Thank you for registering! Please wait for a confirmation SMS when you have been fully onboarded, which you’ll need to log in.</p>
+            </div>
+            <Link href={'/'} className='underline'>Go Home</Link>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

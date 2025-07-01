@@ -14,7 +14,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-// Define Zod schema for form validation (only editable fields)
 const editUserSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters').max(50, 'First name is too long'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50, 'Last name is too long'),

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Loader2, Plus, Search, MessageSquare, Users, DollarSign, Lock, BadgeCheck, ThumbsUp } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Admin, User } from "@/lib/types";
+import { Admin, Branch, User } from "@/lib/types";
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -27,6 +27,9 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [adminsList, setAdminsList] = useState<Admin[]>([]); // List of available admins
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  
 
   useEffect(() => {
     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
@@ -40,6 +43,25 @@ export default function UsersPage() {
     });
     return () => unsubscribeUsers();
   }, []);
+
+  // Fetch branches
+  useEffect(() => {
+    setLoadingBranches(true);
+    const unsubscribeBranches = onSnapshot(collection(db, "branches"), (snapshot) => {
+      const branchesData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.data().name || doc.id,
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        })) as Branch[];
+        setBranches(branchesData);
+        setLoadingBranches(false);
+      }, (error) => {
+        console.error("Error fetching branches:", error);
+        toast.error("Failed to load branches.");
+        setLoadingBranches(false);
+      });
+      return () => unsubscribeBranches();
+    }, []);
 
   // Fetch admins
   useEffect(() => {
@@ -65,6 +87,11 @@ export default function UsersPage() {
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getBranchName = (branchId: any) => {
+    const branch = branches.find((b) => b.id === branchId);
+    return branch ? branch.name : branchId;
+  };
 
   const handleUserStatusChange = async (userId: string, newStatus: "active" | "inactive") => {
     setLoading(true);
@@ -193,7 +220,7 @@ export default function UsersPage() {
                   <TableCell colSpan={8} className="text-center">
                     <div className="flex items-center justify-center">
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading Prospects...
+                      Loading Users...
                     </div>
                   </TableCell>
                 </TableRow>
@@ -209,7 +236,7 @@ export default function UsersPage() {
                     <TableCell className="w-1/8">{id + 1}</TableCell>
                     <TableCell className="w-1/8">{user.name}</TableCell>
                     <TableCell className="w-1/8">{user.phoneNumber}</TableCell>
-                    <TableCell className="w-1/8">{user.branch}</TableCell>
+                    <TableCell className="w-1/8">{getBranchName(user.branch)}</TableCell>
                     <TableCell className="w-1/8"><Badge>{user.status}</Badge></TableCell>
                     <TableCell className="w-1/8"><Badge>{user.kyc}</Badge></TableCell>
                     <TableCell className="w-1/8">{user.admins}</TableCell>

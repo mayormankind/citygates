@@ -4,7 +4,7 @@ import { db } from '@/lib/firebaseConfig'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Check, Loader2, Search } from 'lucide-react'
+import { Check, Loader2, Search, UserPlus2 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Prospect } from '@/lib/types'
 import { collection, onSnapshot } from 'firebase/firestore'
@@ -19,6 +19,7 @@ export default function Prospects() {
   const [ prospects, setProspects ] = useState<Prospect[]>([])
   const [selectedUser, setSelectedUser] = useState<Prospect | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
   
   
 
@@ -117,10 +118,10 @@ export default function Prospects() {
                         <Button
                           className="bg-blue-600 text-white"
                           variant="ghost"
-                          title="Edit Prospect"
+                          title="Onboard User"
                           onClick={() => handleEditProfile(prospect)}
                         >
-                          <Check aria-label="Edit Store" className="h-4 w-4" />
+                          <UserPlus2 aria-label="Edit Store" className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
