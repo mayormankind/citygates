@@ -166,7 +166,7 @@ export default function ManageAdminsPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:px-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row gap-4 justify-between md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">Manage Admins</h1>
           <p className="text-gray-600 m-0">Manage your admin accounts here.</p>
@@ -182,7 +182,7 @@ export default function ManageAdminsPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex justify-between w-full gap-8">
+            <div className="flex flex-col md:flex-row justify-between w-full gap-4 md:gap-8">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input

@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { collection, doc, onSnapshot, deleteDoc, query, where, getDocs } from "firebase/firestore";
 import BroadcastModal from "@/components/modals/broadcast-modal";
+import { User } from "@/lib/types";
 
 interface Broadcast {
   id: string;
@@ -16,11 +17,11 @@ interface Broadcast {
   createdAt: Date;
 }
 
-interface User {
-  id: string;
-  phone: string;
-  branch: string;
-}
+// interface User {
+//   id: string;
+//   phoneNumber: string;
+//   branch: string;
+// }
 
 export default function Broadcast() {
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
@@ -44,7 +45,7 @@ export default function Broadcast() {
     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
       const usersData = snapshot.docs.map((doc) => ({
         id: doc.id,
-        phone: doc.data().phone || "",
+        phoneNumber: doc.data().phoneNumber || "",
         branch: doc.data().branch || "",
       })) as User[];
       setUsers(usersData);
@@ -70,14 +71,16 @@ export default function Broadcast() {
     }
   };
 
+  console.log(users)
+
   // Get phone numbers for a broadcast
   const getRecipientPhones = (recipients: string[]) => {
     if (recipients[0] === "all") {
-      return users.map((user) => user.phone).filter(Boolean);
+      return users.map((user) => user.phoneNumber).filter(Boolean);
     }
     return users
-      .filter((user) => recipients.includes(user.branch))
-      .map((user) => user.phone)
+      .filter((user) => recipients.includes(user.branch as any))
+      .map((user) => user.phoneNumber)
       .filter(Boolean);
   };
 
