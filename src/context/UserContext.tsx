@@ -10,7 +10,7 @@ interface UserData {
   // name: string;
   role: string;
   email: string;
-  [key: string]: any; // for additional fields
+  [key: string]: any;
 }
 
 interface UserContextType {

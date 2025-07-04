@@ -1,24 +1,3 @@
-// // app/api/send-email/route.ts
-// import { NextResponse } from 'next/server';
-// import { Resend } from 'resend';
-
-// export async function POST(request: Request) {
-//   const { email, subject, text } = await request.json();
-//   const resend = new Resend(process.env.RESEND_TOKEN);
-//   try {
-//     const response = await resend.emails.send({
-//       from: process.env.EMAIL_USER as string,
-//       to: email,
-//       subject,
-//       html: `<p>${text}</p>`,
-//     });
-//     return NextResponse.json(response);
-//   } catch (error: any) {
-//     console.error('Error sending email:', error);
-//     return NextResponse.json({ error: error.message }, { status: 500 });
-//   }
-// }
-
 // app/api/send-email/route.ts
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
@@ -43,14 +22,8 @@ export async function POST(request: Request) {
   });
 
   try {
-    // Mock response for local testing
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Mock email sent to ${email}: Subject: ${subject}, Text: ${text}`);
-      return NextResponse.json({ id: 'mock-email-id', success: true });
-    }
-
     const info = await transporter.sendMail({
-      from: `"Citygates Food Bank" <${process.env.EMAIL_USER}>`, // e.g., "Citygates Food Bank" <mayowamakinde23@gmail.com>
+      from: `"Citygates Food Bank" <${process.env.EMAIL_USER}>`,
       to: email,
       subject,
       html: `<p>${text}</p>`,

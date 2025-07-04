@@ -134,7 +134,7 @@ export default function CreateRoleModal({ open, onOpenChange }: CreateRoleModalP
               <label className="block text-sm font-medium text-gray-700">Select Branch</label>
               <Select value={branchId} onValueChange={setBranchId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Role" />
+                  <SelectValue placeholder="Select Branch" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

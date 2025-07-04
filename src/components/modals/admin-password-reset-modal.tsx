@@ -25,7 +25,7 @@ type FormData = z.infer<typeof resetSchema>;
 interface AdminResetPasswordProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  adminEmail: string; // Email to re-authenticate
+  adminEmail: string; 
   onPasswordChanged: () => void; 
 }
 
@@ -53,11 +53,10 @@ export default function AdminResetPassword({
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      // Re-authenticate the user (admin must be logged in to change password)
       const user = auth.currentUser;
       if (user && user.email === adminEmail) {
         await updatePassword(user, data.password);
-        toast.success('Password updated successfully!');
+        toast.success("Admin's password has been changed successfully.");
         reset();
         onPasswordChanged();
       } else {

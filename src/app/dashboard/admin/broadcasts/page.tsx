@@ -17,12 +17,6 @@ interface Broadcast {
   createdAt: Date;
 }
 
-// interface User {
-//   id: string;
-//   phoneNumber: string;
-//   branch: string;
-// }
-
 export default function Broadcast() {
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [loading, setLoading] = useState(true);

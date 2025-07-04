@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Loader2, Plus, Search, MessageSquare, Users, DollarSign, Lock, BadgeCheck, ThumbsUp } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Admin, Branch, User } from "@/lib/types";
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
@@ -15,20 +15,25 @@ import { Badge } from "@/components/ui/badge";
 import KycModal from "@/components/modals/kycModal";
 import ManageAdminsModal from "@/components/modals/manageAdminsModal";
 import ActivateUserModal from "@/components/modals/activateUserModal";
+import UserMessageModal from "@/components/modals/user-message-modal";
+import RestrictUserModal from "@/components/modals/restrictUserModal";
 
 export default function UsersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
-  const [showActivateModal, setShowActivateModal] = useState(false); // For activation confirmation
-  const [showManageAdminsModal, setShowManageAdminsModal] = useState(false); // For managing admins
-  const [searchTerm, setSearchTerm] = useState("");
+  const [showActivateModal, setShowActivateModal] = useState(false);
+  const [showRestrictModal, setShowRestrictModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showManageAdminsModal, setShowManageAdminsModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [UserToMessage, setUserToMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [adminsList, setAdminsList] = useState<Admin[]>([]); // List of available admins
+  const [adminsList, setAdminsList] = useState<Admin[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
+  const [ showUserMessageModal, setShowUserMessageModal] = useState(false);
   
 
   useEffect(() => {
@@ -93,13 +98,14 @@ export default function UsersPage() {
     return branch ? branch.name : branchId;
   };
 
-  const handleUserStatusChange = async (userId: string, newStatus: "active" | "inactive") => {
+  const handleUserStatusChange = async (userId: string, newStatus: "active" | "restricted") => {
     setLoading(true);
     try {
       const userRef = doc(db, "users", userId);
+      setShowActivateModal(false);
+      setShowRestrictModal(false);
       await updateDoc(userRef, { status: newStatus });
-      toast.success(`User ${newStatus} successfully!`);
-      setShowActivateModal(false); // Close activation modal after success
+      toast.success(`User ${newStatus === 'active' ? 'activated' : newStatus} successfully!`);
     } catch (error) {
       console.error("Error updating user status:", error);
       toast.error("Failed to update user status.");
@@ -118,7 +124,7 @@ export default function UsersPage() {
         toast.error("Citygates Food Bank: Please assign at least one admin to user before activating!");
       } else {
         setSelectedUser(userToActivate);
-        setShowActivateModal(true); // Open confirmation modal
+        setShowActivateModal(true);
       }
     } else {
       toast.error("User not found.");
@@ -138,6 +144,7 @@ export default function UsersPage() {
   const handleManageTransactions = (userId: string) => {
     console.log("Manage transactions for user:", userId);
   };
+
   const handleManageAdmins = (userId: string) => {
     const userToManage = users.find((u) => u.id === userId);
     if (userToManage) {
@@ -147,6 +154,7 @@ export default function UsersPage() {
       toast.error("User not found.");
     }
   };
+
   const handleSendMessage = (userId: string) => {
     console.log("Send message to user:", userId);
   };
@@ -160,8 +168,13 @@ export default function UsersPage() {
       toast.error("User not found.");
     }
   };
-  const handleRestrictUser = (userId: string) => {
-    console.log("Restrict user:", userId);
+
+  const handleRestrictUser = async (userId: string) => {
+    const userToActivate = users.find((u) => u.id === userId);
+    if(userToActivate){
+      setSelectedUser(userToActivate);
+      setShowRestrictModal(true);
+    }
   };
 
   const handleKycUpdate = () => {
@@ -337,6 +350,49 @@ export default function UsersPage() {
                               <Edit className="h-4 w-4" />
                             </Button>
                           </>
+                        ) : user.kyc === "approved" && user.status === "restricted" ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              title="Activate User"
+                              onClick={() => handleActivateUser(user.id)}
+                              className="bg-green-600 text-white hover:text-green-700"
+                            >
+                              <ThumbsUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              title="Manage Transactions"
+                              onClick={() => handleManageTransactions(user.id)}
+                              className="bg-blue-600 text-white hover:text-blue-700"
+                            >
+                              <DollarSign className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              title="Manage Admins"
+                              onClick={() => handleManageAdmins(user.id)}
+                              className="bg-purple-600 text-white hover:text-purple-700"
+                            >
+                              <Users className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              title="Send Message"
+                              onClick={() => handleSendMessage(user.id)}
+                              className="bg-orange-600 text-white hover:text-orange-700"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              title="Edit Profile"
+                              onClick={() => handleEditProfile(user.id)}
+                              className="bg-blue-600 text-white hover:text-blue-700"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </>
                         ) : null}
                       </div>
                     </TableCell>
@@ -376,6 +432,16 @@ export default function UsersPage() {
           setLoading={setLoading}
         />
       )}
+      {showRestrictModal && selectedUser && (
+        <RestrictUserModal
+          open={showRestrictModal}
+          onOpenChange={setShowRestrictModal}
+          user={selectedUser}
+          onActivate={handleUserStatusChange}
+          loading={loading}
+          setLoading={setLoading}
+        />
+      )}
       {showManageAdminsModal && selectedUser && (
         <ManageAdminsModal
           open={showManageAdminsModal}
@@ -388,6 +454,14 @@ export default function UsersPage() {
           }}
           loading={loading}
           setLoading={setLoading}
+        />
+      )}
+
+      {showUserMessageModal && (
+        <UserMessageModal
+          open={showUserMessageModal}
+          onOpenChange={setShowUserMessageModal}
+          userName={UserToMessage}
         />
       )}
     </div>

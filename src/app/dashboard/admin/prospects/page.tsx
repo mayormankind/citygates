@@ -81,9 +81,9 @@ export default function Prospects() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-1/4">S/N</TableHead>
+                <TableHead className="">S/N</TableHead>
+                <TableHead className="w-1/4">Prospect Email</TableHead>
                 <TableHead className="w-1/4">Prospect Name</TableHead>
-                <TableHead className="w-1/4">Assigned Admin</TableHead>
                 <TableHead className="w-1/4">Created At</TableHead>  
                 <TableHead className="w-1/4">Actions</TableHead>  
               </TableRow>
@@ -100,15 +100,15 @@ export default function Prospects() {
                 </TableRow>
               ) : prospects.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={5} className="text-center">
                     No prospects available. Please add a prospect.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredProspects.map((prospect, id) => (
                   <TableRow key={prospect.id}>
-                    <TableCell className="w-1/4">{id + 1}</TableCell>
-                    <TableCell className="w-1/4">{prospect.name}</TableCell>
+                    <TableCell className="">{id + 1}</TableCell>
+                    <TableCell className="w-1/4">{prospect.email}</TableCell>
                     <TableCell className="w-1/4">{prospect.name}</TableCell>
                     <TableCell className="w-1/4">
                       {new Date(prospect.createdAt).toLocaleDateString()}

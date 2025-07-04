@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Loader2 } from 'lucide-react';
 import { User } from '@/lib/types';
 
-interface ActivateUserModalProps {
+interface RestrictUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User;
@@ -13,13 +13,13 @@ interface ActivateUserModalProps {
   setLoading: (loading: boolean) => void;
 }
 
-export default function ActivateUserModal({ open, onOpenChange, user, onActivate, loading, setLoading }: ActivateUserModalProps) {
-  const handleConfirmActivate = async () => {
+export default function RestrictUserModal({ open, onOpenChange, user, onActivate, loading, setLoading }: RestrictUserModalProps) {
+  const handleConfirmRestrict = async () => {
     setLoading(true);
     try {
-      await onActivate(user.id, "active");
+      await onActivate(user.id, "restricted");
     } catch (error) {
-      console.error("Activation error:", error);
+      console.error("Restriction error:", error);
     } finally {
       setLoading(false);
     }
@@ -29,9 +29,9 @@ export default function ActivateUserModal({ open, onOpenChange, user, onActivate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Activate User</DialogTitle>
+          <DialogTitle>Restrict User</DialogTitle>
           <DialogDescription>
-            Are you sure you want to activate {user.name}? This action cannot be undone.
+            Are you sure you want to restrict {user.name}? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -39,12 +39,12 @@ export default function ActivateUserModal({ open, onOpenChange, user, onActivate
             Cancel
           </Button>
           <Button
-            className="bg-green-600 text-white hover:bg-green-700"
-            onClick={handleConfirmActivate}
+            className="bg-red-600 text-white hover:bg-red-700"
+            onClick={handleConfirmRestrict}
             disabled={loading}
           >
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Activate
+            Restrict
           </Button>
         </DialogFooter>
       </DialogContent>

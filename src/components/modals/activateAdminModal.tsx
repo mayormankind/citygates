@@ -2,22 +2,22 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Loader2 } from 'lucide-react';
-import { User } from '@/lib/types';
+import { Admin } from '@/lib/types';
 
-interface ActivateUserModalProps {
+interface ActivateAdminModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User;
+  admin: Admin;
   onActivate: (userId: string, newStatus: "active" | "restricted") => Promise<void>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
 }
 
-export default function ActivateUserModal({ open, onOpenChange, user, onActivate, loading, setLoading }: ActivateUserModalProps) {
+export default function ActivateAdminModal({ open, onOpenChange, admin, onActivate, loading, setLoading }: ActivateAdminModalProps) {
   const handleConfirmActivate = async () => {
     setLoading(true);
     try {
-      await onActivate(user.id, "active");
+      await onActivate(admin.id, "active");
     } catch (error) {
       console.error("Activation error:", error);
     } finally {
@@ -29,9 +29,9 @@ export default function ActivateUserModal({ open, onOpenChange, user, onActivate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Activate User</DialogTitle>
+          <DialogTitle>Activate Admin</DialogTitle>
           <DialogDescription>
-            Are you sure you want to activate {user.name}? This action cannot be undone.
+            Are you sure you want to activate {admin.email}? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

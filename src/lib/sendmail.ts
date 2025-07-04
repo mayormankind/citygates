@@ -1,21 +1,3 @@
-// // lib/sendmail.ts
-// export const sendEmail = async (email: string, detail: { subject: string; text: string }) => {
-//   try {
-//     const response = await fetch('/api/send-email', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ email, subject: detail.subject, text: detail.text }),
-//     });
-//     if (!response.ok) {
-//       throw new Error('Failed to send email');
-//     }
-//     return await response.json();
-//   } catch (error: any) {
-//     console.error('Error sending email:', error);
-//     throw error;
-//   }
-// };
-
 // lib/sendmail.ts
 export const sendEmail = async (email: string, detail: { subject: string; text: string }) => {
   try {

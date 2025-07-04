@@ -308,10 +308,12 @@ export default function Register() {
                   <h2 className='text-2xl font-bold'>CityGates Food Bank</h2>
                 </div>
               </Link>
-              <CheckCircle className='bg-green-200 text-green-600 animate-pulse transition-all duration-150'/>
+              <div className="flex p-8 bg-green-200 rounded-full mx-auto">
+                <CheckCircle className='h-8 w-8 text-green-600 animate-pulse transition-all duration-100'/>
+              </div>
               <p className='leading-4 font-medium text-black'>Thank you for registering! Please wait for a confirmation SMS when you have been fully onboarded, which you’ll need to log in.</p>
             </div>
-            <Link href={'/'} className='underline'>Go Home</Link>
+            <Link href={'/'} className='underline text-center'>Go Home</Link>
           </DialogContent>
         </Dialog>
       )}

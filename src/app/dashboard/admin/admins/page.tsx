@@ -17,6 +17,7 @@ import {
   Loader2,
   Plus,
   Search,
+  ThumbsUp,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Admin, Branch, Role } from "@/lib/types"; // Added Role type
@@ -34,19 +35,27 @@ import {
 } from "@/components/ui/select";
 import CreateAdminModal from "@/components/modals/add-admin-modal";
 import AdminResetPassword from "@/components/modals/admin-password-reset-modal";
+import AdminMessageModal from "@/components/modals/admin-message-modal";
+import ActivateAdminModal from "@/components/modals/activateAdminModal";
+import RestrictAdminModal from "@/components/modals/restictAdminModal";
 
 export default function ManageAdminsPage() {
   const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [ AdminToMessage, setAdminToMessage ] = useState("");
   const [loadingAdmins, setLoadingAdmins] = useState(false); 
   const [loadingBranches, setLoadingBranches] = useState(false);
-  const [loadingRoles, setLoadingRoles] = useState(false); // New state for roles loading
+  const [loadingRoles, setLoadingRoles] = useState(false);
+  const [ adminMessageModal, setAdminMessageModal] = useState(false);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [selectedAdminEmail, setSelectedAdminEmail] = useState<string | null>(null);
+  const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]); // New state for roles
+  const [roles, setRoles] = useState<Role[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
+  const [showActivateModal, setShowActivateModal] = useState(false);
+  const [showRestrictModal, setShowRestrictModal] = useState(false);
 
   // Fetch admins
   useEffect(() => {
@@ -140,23 +149,69 @@ export default function ManageAdminsPage() {
     }
   };
 
-  const handleRestrictUser = async (adminId: string) => {
+  const handleUserStatusChange = async (userId: string, newStatus: "active" | "restricted") => {
     setLoadingAdmins(true);
     try {
-      const adminRef = doc(db, "admins", adminId); // Changed from "users" to "admins"
-      await updateDoc(adminRef, { status: "inactive" });
-      toast.success("Admin restricted successfully!");
+      const userRef = doc(db, "admins", userId);
+      setShowActivateModal(false);
+      setShowRestrictModal(false);
+      await updateDoc(userRef, { status: newStatus });
+      toast.success(`Admin ${newStatus === 'active' ? 'activated' : newStatus} successfully!`);
     } catch (error) {
-      console.error("Error restricting admin:", error);
-      toast.error("Failed to restrict admin.");
+      console.error("Error updating user status:", error);
+      toast.error("Failed to update user status.");
     } finally {
       setLoadingAdmins(false);
     }
   };
 
-  const handleSendMessage = (adminId: string) => {
-    console.log("Send message to admin:", adminId);
-    toast.info("Message sending feature to be implemented.");
+  const handleActivateAdmin = (adminId: string) => {
+    const adminToActivate = admins.find((u) => u.id === adminId);
+    if (adminToActivate) {
+        setSelectedAdmin(adminToActivate);
+        setShowActivateModal(true);
+    }
+  };
+ 
+  const handleRestrictAdmin = (adminId: string) => {
+    const adminToActivate = admins.find((u) => u.id === adminId);
+    if (adminToActivate) {
+        setSelectedAdmin(adminToActivate);
+        setShowRestrictModal(true);
+    }
+  };
+
+  // const handleRestrictAdmin = async (adminId: string) => {
+  //   setLoadingAdmins(true);
+  //   try {
+  //     const adminRef = doc(db, "admins", adminId);
+  //     await updateDoc(adminRef, { status: "inactive" });
+  //     toast.success("Admin restricted successfully!");
+  //   } catch (error) {
+  //     console.error("Error restricting admin:", error);
+  //     toast.error("Failed to restrict admin.");
+  //   } finally {
+  //     setLoadingAdmins(false);
+  //   }
+  // };
+
+  // const handleActivateAdmin = async (adminId: string) => {
+  //   setLoadingAdmins(true);
+  //   try {
+  //     const adminRef = doc(db, "admins", adminId);
+  //     await updateDoc(adminRef, { status: "active" });
+  //     toast.success("Admin activated successfully!");
+  //   } catch (error) {
+  //     console.error("Error activating admin:", error);
+  //     toast.error("Failed to activate admin.");
+  //   } finally {
+  //     setLoadingAdmins(false);
+  //   }
+  // };
+
+  const handleSendMessage = (adminEmail: string) => {
+    setAdminMessageModal(true);
+    setAdminToMessage(adminEmail)
   };
 
   const handlePasswordChanged = () => {
@@ -268,18 +323,29 @@ export default function ManageAdminsPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          title="Restrict User"
-                          onClick={() => handleRestrictUser(admin.id)}
-                          className="bg-red-600 text-white hover:bg-red-700"
-                        >
-                          <Lock className="h-4 w-4" />
-                        </Button>
+                        {admin.status === 'active' ? (
+                          <Button
+                            variant="ghost"
+                            title="Restrict Admin"
+                            onClick={() => handleRestrictAdmin(admin.id)}
+                            className="bg-red-600 text-white hover:bg-red-700"
+                          >
+                            <Lock className="h-4 w-4" />
+                          </Button>) :
+                          (<Button
+                            variant="ghost"
+                            title="Activate Admin"
+                            onClick={() => handleActivateAdmin(admin.id)}
+                            className="bg-green-600 text-white hover:bg-green-700"
+                          >
+                            <ThumbsUp className="h-4 w-4" />
+                          </Button>
+
+                        )}
                         <Button
                           variant="ghost"
                           title="Send Message"
-                          onClick={() => handleSendMessage(admin.id)}
+                          onClick={() => handleSendMessage(admin.email)}
                           className="bg-orange-600 text-white hover:bg-orange-700"
                         >
                           <MessageSquare className="h-4 w-4" />
@@ -306,6 +372,36 @@ export default function ManageAdminsPage() {
           onOpenChange={setShowResetPasswordModal}
           adminEmail={selectedAdminEmail}
           onPasswordChanged={handlePasswordChanged}
+        />
+      )}
+
+      {adminMessageModal && (
+        <AdminMessageModal
+          open={adminMessageModal}
+          onOpenChange={setAdminMessageModal}
+          adminName={AdminToMessage}
+        />
+      )}
+
+      {showActivateModal && selectedAdmin && (
+        <ActivateAdminModal
+          open={showActivateModal}
+          onOpenChange={setShowActivateModal}
+          admin={selectedAdmin}
+          onActivate={handleUserStatusChange}
+          loading={loadingAdmins}
+          setLoading={setLoadingAdmins}
+        />
+      )}
+
+      {showRestrictModal && selectedAdmin && (
+        <RestrictAdminModal
+          open={showRestrictModal}
+          onOpenChange={setShowRestrictModal}
+          admin={selectedAdmin}
+          onActivate={handleUserStatusChange}
+          loading={loadingAdmins}
+          setLoading={setLoadingAdmins}
         />
       )}
     </div>

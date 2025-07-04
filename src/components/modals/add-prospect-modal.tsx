@@ -19,9 +19,11 @@ const userSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters').max(50, 'First name is too long'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50, 'Last name is too long'),
   email: z.string().email('Invalid email address'),
+  // phoneNumber: z
+  //   .string()
+  //   .regex(/^\d{10}$/, 'Phone number must be 10 digits (excluding +234)'),
   phoneNumber: z
-    .string()
-    .regex(/^\d{10}$/, 'Phone number must be 10 digits (excluding +234)'),
+    .string().min(10,'Phone number must be 10 digits (excluding +234)'),
   state: z.string().min(1, 'Please select a state'),
   lga: z.string().min(1, 'Please select a local government area'),
   streetAddress: z.string().min(5, 'Street address must be at least 5 characters').max(200, 'Street address is too long'),
@@ -115,7 +117,7 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
     try {
       const storeData = {
         name: `${data.firstName} ${data.lastName}`,
-        phoneNumber: `+234${data.phoneNumber}`,
+        phoneNumber: data.phoneNumber,
         branch: data.branch || '',
         status: 'pending',
         kyc: 'pending',
