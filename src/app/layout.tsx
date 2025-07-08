@@ -5,7 +5,6 @@ import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { Toaster } from "sonner";
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -19,8 +18,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CityGates",
   description: "Your go to loan snd survival merchant",
-  icons:'/globe.svg'
-}
+  icons: "/globe.svg",
+};
 
 export default function RootLayout({
   children,
@@ -33,12 +32,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <main>
-          <Header/>
+          <Header />
           {children}
-          <Footer/>
+          <Footer />
         </main>
       </body>
-      <Toaster richColors/>
+      <Toaster richColors position="top-center" />
     </html>
   );
 }

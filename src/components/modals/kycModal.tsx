@@ -1,16 +1,37 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Input } from '../ui/input';
-import { toast } from 'sonner';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
-import { Loader2 } from 'lucide-react';
-import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { User } from '@/lib/types';
-import axios from 'axios';
-import { auth } from '@/lib/firebaseConfig';
+import React, { useState, useEffect, useMemo } from "react";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Loader2 } from "lucide-react";
+import {
+  doc,
+  updateDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { User } from "@/lib/types";
+import axios from "axios";
+import { auth } from "@/lib/firebaseConfig";
 
 interface Bank {
   name: string;
@@ -49,19 +70,26 @@ interface KycModalProps {
   setLoading: (loading: boolean) => void;
 }
 
-export default function KycModal({ open, onOpenChange, user, onKycUpdate, loading, setLoading }: KycModalProps) {
+export default function KycModal({
+  open,
+  onOpenChange,
+  user,
+  onKycUpdate,
+  loading,
+  setLoading,
+}: KycModalProps) {
   const [kycForm, setKycForm] = useState<KycForm>({
-    email: '',
-    phoneNumber: '',
-    firstName: '',
-    lastName: '',
-    state: '',
-    lga: '',
-    streetAddress: '',
-    bankName: '',
+    email: "",
+    phoneNumber: "",
+    firstName: "",
+    lastName: "",
+    state: "",
+    lga: "",
+    streetAddress: "",
+    bankName: "",
     accountDetails: null,
   });
-  const [accountNumber, setAccountNumber] = useState('');
+  const [accountNumber, setAccountNumber] = useState("");
   const [nigerianBanks, setNigerianBanks] = useState<Bank[]>([]);
   const [bankFetchError, setBankFetchError] = useState(false);
 
@@ -69,27 +97,32 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
   useEffect(() => {
     const fetchBanks = async () => {
       try {
-        const response = await axios.get('https://nubapi.com/bank-json', {
+        const response = await axios.get("https://nubapi.com/bank-json", {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
-        if (Array.isArray(response.data) && response.data.every((b: any) => typeof b.name === 'string' && typeof b.code === 'string')) {
+        if (
+          Array.isArray(response.data) &&
+          response.data.every(
+            (b: any) => typeof b.name === "string" && typeof b.code === "string"
+          )
+        ) {
           // Sort banks alphabetically
           const sortedBanks = response.data.sort((a: Bank, b: Bank) =>
             a.name.localeCompare(b.name)
           );
           setNigerianBanks(sortedBanks);
         } else {
-          throw new Error('Invalid bank data format');
+          throw new Error("Invalid bank data format");
         }
       } catch (error: any) {
-        console.error('Error fetching banks:', {
+        console.error("Error fetching banks:", {
           message: error.message,
           status: error.response?.status,
           data: error.response?.data,
         });
-        toast.error('Failed to load bank list. Please try again.');
+        toast.error("Failed to load bank list. Please try again.");
         setBankFetchError(true);
       }
     };
@@ -101,33 +134,39 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
     if (user) {
       const nameParts = user.name.trim().split(/\s+/);
       setKycForm({
-        email: user.email || '',
-        phoneNumber: user.phoneNumber ? String(user.phoneNumber) : '',
-        firstName: nameParts[0] || '',
-        lastName: nameParts.length > 1 ? nameParts.slice(1).join(' ') : '',
-        state: user.state || '',
-        lga: user.lga || '',
-        streetAddress: user.streetAddress || '',
-        bankName: '',
+        email: user.email || "",
+        phoneNumber: user.phoneNumber ? String(user.phoneNumber) : "",
+        firstName: nameParts[0] || "",
+        lastName: nameParts.length > 1 ? nameParts.slice(1).join(" ") : "",
+        state: user.state || "",
+        lga: user.lga || "",
+        streetAddress: user.streetAddress || "",
+        bankName: "",
         accountDetails: null,
       });
-      setAccountNumber('');
+      setAccountNumber("");
     }
   }, [user]);
 
   const handleKycAccountVerification = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountNumber || accountNumber.length !== 10 || !/^\d{10}$/.test(accountNumber)) {
-      toast.error('Please enter a valid 10-digit account number.');
+    if (
+      !accountNumber ||
+      accountNumber.length !== 10 ||
+      !/^\d{10}$/.test(accountNumber)
+    ) {
+      toast.error("Please enter a valid 10-digit account number.");
       return;
     }
     if (!kycForm.bankName) {
-      toast.error('Please select a bank.');
+      toast.error("Please select a bank.");
       return;
     }
-    const bankCode = nigerianBanks.find((b) => b.name === kycForm.bankName)?.code;
+    const bankCode = nigerianBanks.find(
+      (b) => b.name === kycForm.bankName
+    )?.code;
     if (!bankCode) {
-      toast.error('Selected bank is invalid.');
+      toast.error("Selected bank is invalid.");
       return;
     }
     setLoading(true);
@@ -137,13 +176,18 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
         `https://nubapi.com/api/verify?account_number=${accountNumber}&bank_code=${bankCode}`,
         {
           headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_NUBAPI_TOKEN || 'missing-token'}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_NUBAPI_TOKEN || "missing-token"}`,
+            "Content-Type": "application/json",
           },
         }
       );
       const data = response.data;
-      if (data.status && data.account_name && data.Bank_name && data.account_number) {
+      if (
+        data.status &&
+        data.account_name &&
+        data.Bank_name &&
+        data.account_number
+      ) {
         setKycForm((prev) => ({
           ...prev,
           accountDetails: {
@@ -157,17 +201,21 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
             status: data.status,
           },
         }));
-        toast.success('Account verified successfully!');
+        toast.success("Account verified successfully!");
       } else {
-        throw new Error('Invalid account details');
+        throw new Error("Invalid account details");
       }
     } catch (error: any) {
-      console.error('Error verifying account:', {
+      console.error("Error verifying account:", {
         message: error.message,
         status: error.response?.status,
         data: error.response?.data,
       });
-      toast.error('Failed to verify account. Please check the details.', error.response?.data?.message || 'Failed to verify account. Please check the details.');
+      toast.error(
+        "Failed to verify account. Please check the details.",
+        error.response?.data?.message ||
+          "Failed to verify account. Please check the details."
+      );
     } finally {
       setLoading(false);
     }
@@ -175,36 +223,36 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
 
   const handleAcceptKYC = async () => {
     if (!user?.id) {
-      toast.error('Invalid user data.');
+      toast.error("Invalid user data.");
       return;
     }
     if (!kycForm.accountDetails) {
-      toast.error('Please verify the account first.');
+      toast.error("Please verify the account first.");
       return;
     }
     setLoading(true);
     try {
-      const userRef = doc(db, 'users', user.id);
+      const userRef = doc(db, "users", user.id);
       await updateDoc(userRef, {
-        kyc: 'approved',
-        status: 'pending',
+        kyc: "approved",
+        status: "pending",
         bankName: kycForm.accountDetails.Bank_name,
         accountNumber: kycForm.accountDetails.account_number,
         accountName: kycForm.accountDetails.account_name,
         // bankCode: kycForm.accountDetails.bank_code,
       });
-      await addDoc(collection(db, 'kyc_audits'), {
+      await addDoc(collection(db, "kyc_audits"), {
         userId: user.id,
-        action: 'approved',
+        action: "approved",
         timestamp: serverTimestamp(),
-        performedBy: auth.currentUser?.uid || 'unknown',
+        performedBy: auth.currentUser?.uid || "unknown",
       });
-      toast.success('KYC accepted. User awaiting activation.');
       onOpenChange(false);
+      toast.success("KYC accepted. User awaiting activation.");
       onKycUpdate();
     } catch (error: any) {
-      console.error('Error accepting KYC:', error);
-      toast.error('Failed to accept KYC.');
+      console.error("Error accepting KYC:", error);
+      toast.error("Failed to accept KYC.");
     } finally {
       setLoading(false);
     }
@@ -212,27 +260,27 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
 
   const handleRejectKYC = async () => {
     if (!user?.id) {
-      toast.error('Invalid user data.');
+      toast.error("Invalid user data.");
       return;
     }
     setLoading(true);
     try {
-      const userRef = doc(db, 'users', user.id);
+      const userRef = doc(db, "users", user.id);
       await updateDoc(userRef, {
-        kyc: 'rejected',
+        kyc: "rejected",
       });
-      await addDoc(collection(db, 'kyc_audits'), {
+      await addDoc(collection(db, "kyc_audits"), {
         userId: user.id,
-        action: 'rejected',
+        action: "rejected",
         timestamp: serverTimestamp(),
-        performedBy: auth.currentUser?.uid || 'unknown',
+        performedBy: auth.currentUser?.uid || "unknown",
       });
-      toast.error('KYC rejected.');
+      toast.error("KYC rejected.");
       onOpenChange(false);
       onKycUpdate();
     } catch (error: any) {
-      console.error('Error rejecting KYC:', error);
-      toast.error('Failed to reject KYC.');
+      console.error("Error rejecting KYC:", error);
+      toast.error("Failed to reject KYC.");
     } finally {
       setLoading(false);
     }
@@ -245,9 +293,14 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
       <DialogContent className="sm:max-w-[425px] h-full max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Finish KYC</DialogTitle>
-          <DialogDescription>Complete the KYC process for {user?.name || 'User'}.</DialogDescription>
+          <DialogDescription>
+            Complete the KYC process for {user?.name || "User"}.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleKycAccountVerification} className="grid gap-3 py-4">
+        <form
+          onSubmit={handleKycAccountVerification}
+          className="grid gap-3 py-4"
+        >
           <div>
             <Label htmlFor="email">Email Address</Label>
             <Input id="email" value={kycForm.email} disabled />
@@ -256,7 +309,11 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
             <span className="text-gray-600">+234</span>
             <div className="flex-1">
               <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Input id="phoneNumber" value={kycForm.phoneNumber.replace(/^\+234/, '')} disabled />
+              <Input
+                id="phoneNumber"
+                value={kycForm.phoneNumber.replace(/^\+234/, "")}
+                disabled
+              />
             </div>
           </div>
           <div className="flex gap-2">
@@ -284,7 +341,9 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
           <div>
             <Label htmlFor="bankName">Bank Name</Label>
             <Select
-              onValueChange={(value) => setKycForm({ ...kycForm, bankName: value })}
+              onValueChange={(value) =>
+                setKycForm({ ...kycForm, bankName: value })
+              }
               value={kycForm.bankName}
             >
               <SelectTrigger className="w-full">
@@ -301,7 +360,9 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
                     ))
                   ) : (
                     <SelectItem value="none" disabled>
-                      {bankFetchError ? 'Failed to load banks' : 'Loading banks...'}
+                      {bankFetchError
+                        ? "Failed to load banks"
+                        : "Loading banks..."}
                     </SelectItem>
                   )}
                 </SelectGroup>
@@ -315,7 +376,7 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
               type="tel"
               value={accountNumber}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                const value = e.target.value.replace(/\D/g, "").slice(0, 10);
                 setAccountNumber(value);
               }}
               placeholder="Enter 10-digit account number"
@@ -324,15 +385,28 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
           </div>
           {kycForm.accountDetails && (
             <div className="p-4 bg-gray-100 rounded-md">
-              <p><strong>Account Name:</strong> {kycForm.accountDetails.account_name}</p>
-              <p><strong>Bank Name:</strong> {kycForm.accountDetails.Bank_name}</p>
-              <p><strong>Account Number:</strong> {kycForm.accountDetails.account_number}</p>
+              <p>
+                <strong>Account Name:</strong>{" "}
+                {kycForm.accountDetails.account_name}
+              </p>
+              <p>
+                <strong>Bank Name:</strong> {kycForm.accountDetails.Bank_name}
+              </p>
+              <p>
+                <strong>Account Number:</strong>{" "}
+                {kycForm.accountDetails.account_number}
+              </p>
               {/* <p><strong>Bank Code:</strong> {kycForm.accountDetails.bank_code}</p> */}
             </div>
           )}
           <Button
             type="submit"
-            disabled={loading || !kycForm.bankName || !accountNumber || accountNumber.length !== 10}
+            disabled={
+              loading ||
+              !kycForm.bankName ||
+              !accountNumber ||
+              accountNumber.length !== 10
+            }
           >
             {loading ? (
               <>
@@ -340,13 +414,17 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
                 Verifying...
               </>
             ) : (
-              'Verify Account'
+              "Verify Account"
             )}
           </Button>
         </form>
         {kycForm.accountDetails && (
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Cancel
             </Button>
             <Button
@@ -356,7 +434,11 @@ export default function KycModal({ open, onOpenChange, user, onKycUpdate, loadin
             >
               Accept KYC
             </Button>
-            <Button variant="destructive" onClick={handleRejectKYC} disabled={loading}>
+            <Button
+              variant="destructive"
+              onClick={handleRejectKYC}
+              disabled={loading}
+            >
               Reject KYC
             </Button>
           </DialogFooter>

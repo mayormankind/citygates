@@ -1,32 +1,55 @@
-import { Loader2 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Input } from '../ui/input';
-import { toast } from 'sonner';
-import { addDoc, collection, serverTimestamp, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { Admin, Branch, Role } from '@/lib/types'; // Added Role type
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
-import { useForm, Controller } from 'react-hook-form'; // Updated to use Controller
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
-import { PasswordInput } from '../ui/password-input';
-import { sendEmail } from '@/lib/sendmail';
+import { Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { toast } from "sonner";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  getDocs,
+} from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { Admin, Branch, Role } from "@/lib/types"; // Added Role type
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { useForm, Controller } from "react-hook-form"; // Updated to use Controller
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { PasswordInput } from "../ui/password-input";
+import { sendEmail } from "@/lib/sendmail";
 
-const adminSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  phoneNumber: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits (excluding +234)'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-  role: z.string().min(1, 'Please select a role'),
-  branch: z.string().min(1, 'Please select a branch'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+const adminSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    phoneNumber: z
+      .string()
+      .regex(/^\d{10}$/, "Phone number must be 10 digits (excluding +234)"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+    role: z.string().min(1, "Please select a role"),
+    branch: z.string().min(1, "Please select a branch"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type FormData = z.infer<typeof adminSchema>;
 
@@ -35,7 +58,10 @@ interface CreateAdminModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) {
+export default function CreateAdminModal({
+  open,
+  onOpenChange,
+}: CreateAdminModalProps) {
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]); // Changed to Role[] type
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -50,12 +76,12 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
   } = useForm<FormData>({
     resolver: zodResolver(adminSchema),
     defaultValues: {
-      email: '',
-      phoneNumber: '',
-      password: '',
-      confirmPassword: '',
-      role: '',
-      branch: '',
+      email: "",
+      phoneNumber: "",
+      password: "",
+      confirmPassword: "",
+      role: "",
+      branch: "",
     },
   });
 
@@ -99,47 +125,51 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
       const uid = userCredential.user.uid;
 
       const emailResponse = await sendEmail(data.email, {
-        subject: 'City Gates Bank Admin',
-        text: `You have been successfully registered as a Citygates Food Bank Admin. Your password to sign in at any time is ${data.password}.`
-      })
+        subject: "City Gates Bank Admin",
+        text: `You have been successfully registered as a Citygates Food Bank Admin. Your password to sign in at any time is ${data.password}.`,
+      });
 
-      const adminData: Omit<Admin, 'id'> = {
+      const adminData: Omit<Admin, "id"> = {
         email: data.email,
-        phoneNumber: `+234${data.phoneNumber}`,
+        phoneNumber: data.phoneNumber,
         role: data.role,
         branch: data.branch,
-        status: 'active',
+        status: "active",
         createdAt: serverTimestamp(),
         uid,
       };
 
-      await addDoc(collection(db, 'admins'), adminData);
+      await addDoc(collection(db, "admins"), adminData);
 
-      toast.success('Admin created', {
-        description: `The admin has been successfully created ${emailResponse.success ? ' (mock email sent)' : ' and an email notification was sent'}.`,
+      toast.success("Admin created", {
+        description: `The admin has been successfully created ${emailResponse.success ? " (mock email sent)" : " and an email notification was sent"}.`,
       });
 
-      toast.success('Admin created', {
-        description: 'The admin has been successfully created and an email notification was sent.',
+      toast.success("Admin created", {
+        description:
+          "The admin has been successfully created and an email notification was sent.",
       });
-
 
       reset();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Submission error:', {
+      console.error("Submission error:", {
         message: error.message,
         code: error.code,
         details: error.response?.data,
       });
-      toast.error('Error creating admin', {
-        description: error.message.includes('CORS') 
-          ? 'Email sending failed due to CORS. Admin created successfully.' 
-          : error.message || 'Failed to create the admin. Please try again.',
+      toast.error("Error creating admin", {
+        description: error.message.includes("CORS")
+          ? "Email sending failed due to CORS. Admin created successfully."
+          : error.message || "Failed to create the admin. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -151,7 +181,9 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
       <DialogContent className="sm:max-w-[425px] h-full max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Admin</DialogTitle>
-          <DialogDescription>Create a new admin account by the super admin.</DialogDescription>
+          <DialogDescription>
+            Create a new admin account by the super admin.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="space-y-1">
@@ -159,10 +191,14 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
             <Input
               id="email"
               placeholder="Enter Email"
-              {...register('email')}
+              {...register("email")}
               disabled={loading}
             />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -173,10 +209,14 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
                 <Input
                   id="phoneNumber"
                   placeholder="Enter Phone Number"
-                  {...register('phoneNumber')}
+                  {...register("phoneNumber")}
                   disabled={loading}
                 />
-                {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
+                {errors.phoneNumber && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.phoneNumber.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -187,10 +227,14 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
               id="password"
               type="password"
               placeholder="Enter Password"
-              {...register('password')}
+              {...register("password")}
               disabled={loading}
             />
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -199,10 +243,14 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
               id="confirmPassword"
               type="password"
               placeholder="Re-Enter Password"
-              {...register('confirmPassword')}
+              {...register("confirmPassword")}
               disabled={loading}
             />
-            {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -229,14 +277,18 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="p-2 text-sm text-gray-500">Loading roles...</div>
+                        <div className="p-2 text-sm text-gray-500">
+                          Loading roles...
+                        </div>
                       )}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role.message}</p>}
+            {errors.role && (
+              <p className="text-red-500 text-xs mt-1">{errors.role.message}</p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -263,14 +315,20 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="p-2 text-sm text-gray-500">Loading branches...</div>
+                        <div className="p-2 text-sm text-gray-500">
+                          Loading branches...
+                        </div>
                       )}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.branch && <p className="text-red-500 text-xs mt-1">{errors.branch.message}</p>}
+            {errors.branch && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.branch.message}
+              </p>
+            )}
           </div>
 
           <Button type="submit" disabled={loading}>
@@ -280,7 +338,7 @@ export default function CreateAdminModal({ open, onOpenChange }: CreateAdminModa
                 Creating...
               </>
             ) : (
-              'Create Admin'
+              "Create Admin"
             )}
           </Button>
         </form>

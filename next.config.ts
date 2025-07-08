@@ -1,29 +1,11 @@
-// import type { NextConfig } from "next";
-
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   experimental: {
-//     missingSuspenseWithCSRBailout: false,
-//   },
-// };
-
-// export default nextConfig;
-
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   experimental: {
-//     missingSuspenseWithCSRBailout: false,
-//   },
-// };
-
-// module.exports = nextConfig;
-
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
     domains: ["res.cloudinary.com"],
   },
+  // output: "export",
+  distDir: "_next",
   async redirects() {
     return [
       {
@@ -41,6 +23,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-
-

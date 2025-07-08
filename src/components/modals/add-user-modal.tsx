@@ -40,29 +40,6 @@ export default function AddUserModal({ open, onOpenChange, Users }: AddUserModal
   const [loading, setLoading] = useState(false);
   const [states, setStates] = useState<State[]>([]);
   const [selectedState, setSelectedState] = useState('');
-  const [loadingAdmins, setLoadingAdmins] = useState(false); 
-  const [admins, setAdmins] = useState<Admin[]>([]);
-
-  useEffect(() => {
-    setLoadingAdmins(true);
-    const unsubscribeAdmins = onSnapshot(collection(db, "admins"),
-      (snapshot) => {
-        const adminsData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        })) as Admin[];
-        setAdmins(adminsData);
-        setLoadingAdmins(false);
-      },
-      (error) => {
-        console.error("Error fetching admins:", error);
-        toast.error("Failed to load admins.");
-        setLoadingAdmins(false);
-      }
-    );
-    return () => unsubscribeAdmins();
-  }, []);
 
   const {
     register,

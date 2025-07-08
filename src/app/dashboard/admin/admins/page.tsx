@@ -24,14 +24,14 @@ import { Admin, Branch, Role } from "@/lib/types"; // Added Role type
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectLabel, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import CreateAdminModal from "@/components/modals/add-admin-modal";
 import AdminResetPassword from "@/components/modals/admin-password-reset-modal";
@@ -43,13 +43,15 @@ export default function ManageAdminsPage() {
   const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [ AdminToMessage, setAdminToMessage ] = useState("");
-  const [loadingAdmins, setLoadingAdmins] = useState(false); 
+  const [AdminToMessage, setAdminToMessage] = useState("");
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(false);
-  const [ adminMessageModal, setAdminMessageModal] = useState(false);
+  const [adminMessageModal, setAdminMessageModal] = useState(false);
   const [admins, setAdmins] = useState<Admin[]>([]);
-  const [selectedAdminEmail, setSelectedAdminEmail] = useState<string | null>(null);
+  const [selectedAdminEmail, setSelectedAdminEmail] = useState<string | null>(
+    null
+  );
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -60,7 +62,8 @@ export default function ManageAdminsPage() {
   // Fetch admins
   useEffect(() => {
     setLoadingAdmins(true);
-    const unsubscribeAdmins = onSnapshot(collection(db, "admins"),
+    const unsubscribeAdmins = onSnapshot(
+      collection(db, "admins"),
       (snapshot) => {
         const adminsData = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -82,48 +85,58 @@ export default function ManageAdminsPage() {
   // Fetch branches
   useEffect(() => {
     setLoadingBranches(true);
-    const unsubscribeBranches = onSnapshot(collection(db, "branches"), (snapshot) => {
-      const branchesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name || doc.id,
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as Branch[];
-      setBranches(branchesData);
-      setLoadingBranches(false);
-    }, (error) => {
-      console.error("Error fetching branches:", error);
-      toast.error("Failed to load branches.");
-      setLoadingBranches(false);
-    });
+    const unsubscribeBranches = onSnapshot(
+      collection(db, "branches"),
+      (snapshot) => {
+        const branchesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name || doc.id,
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+        })) as Branch[];
+        setBranches(branchesData);
+        setLoadingBranches(false);
+      },
+      (error) => {
+        console.error("Error fetching branches:", error);
+        toast.error("Failed to load branches.");
+        setLoadingBranches(false);
+      }
+    );
     return () => unsubscribeBranches();
   }, []);
 
   // Fetch roles
   useEffect(() => {
     setLoadingRoles(true);
-    const unsubscribeRoles = onSnapshot(collection(db, "roles"), (snapshot) => {
-      const rolesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name || doc.id,
-        permissions: doc.data().permissions || [],
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as Role[];
-      setRoles(rolesData);
-      setLoadingRoles(false);
-    }, (error) => {
-      console.error("Error fetching roles:", error);
-      toast.error("Failed to load roles.");
-      setLoadingRoles(false);
-    });
+    const unsubscribeRoles = onSnapshot(
+      collection(db, "roles"),
+      (snapshot) => {
+        const rolesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name || doc.id,
+          permissions: doc.data().permissions || [],
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+        })) as Role[];
+        setRoles(rolesData);
+        setLoadingRoles(false);
+      },
+      (error) => {
+        console.error("Error fetching roles:", error);
+        toast.error("Failed to load roles.");
+        setLoadingRoles(false);
+      }
+    );
     return () => unsubscribeRoles();
   }, []);
 
   // Filter admins by search term and selected branch
   const filteredAdmins = admins.filter((admin) => {
-    const matchesSearch = 
+    const matchesSearch =
       (admin.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(admin.phoneNumber || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBranch = 
+      String(admin.phoneNumber || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+    const matchesBranch =
       selectedBranch === "all" || admin.branch === selectedBranch;
     return matchesSearch && matchesBranch;
   });
@@ -149,14 +162,19 @@ export default function ManageAdminsPage() {
     }
   };
 
-  const handleUserStatusChange = async (userId: string, newStatus: "active" | "restricted") => {
+  const handleUserStatusChange = async (
+    userId: string,
+    newStatus: "active" | "restricted"
+  ) => {
     setLoadingAdmins(true);
     try {
       const userRef = doc(db, "admins", userId);
       setShowActivateModal(false);
       setShowRestrictModal(false);
       await updateDoc(userRef, { status: newStatus });
-      toast.success(`Admin ${newStatus === 'active' ? 'activated' : newStatus} successfully!`);
+      toast.success(
+        `Admin ${newStatus === "active" ? "activated" : newStatus} successfully!`
+      );
     } catch (error) {
       console.error("Error updating user status:", error);
       toast.error("Failed to update user status.");
@@ -168,16 +186,16 @@ export default function ManageAdminsPage() {
   const handleActivateAdmin = (adminId: string) => {
     const adminToActivate = admins.find((u) => u.id === adminId);
     if (adminToActivate) {
-        setSelectedAdmin(adminToActivate);
-        setShowActivateModal(true);
+      setSelectedAdmin(adminToActivate);
+      setShowActivateModal(true);
     }
   };
- 
+
   const handleRestrictAdmin = (adminId: string) => {
     const adminToActivate = admins.find((u) => u.id === adminId);
     if (adminToActivate) {
-        setSelectedAdmin(adminToActivate);
-        setShowRestrictModal(true);
+      setSelectedAdmin(adminToActivate);
+      setShowRestrictModal(true);
     }
   };
 
@@ -211,7 +229,7 @@ export default function ManageAdminsPage() {
 
   const handleSendMessage = (adminEmail: string) => {
     setAdminMessageModal(true);
-    setAdminToMessage(adminEmail)
+    setAdminToMessage(adminEmail);
   };
 
   const handlePasswordChanged = () => {
@@ -223,7 +241,9 @@ export default function ManageAdminsPage() {
     <div className="flex flex-col gap-8 p-4 md:px-8">
       <div className="flex flex-col md:flex-row gap-4 justify-between md:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">Manage Admins</h1>
+          <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">
+            Manage Admins
+          </h1>
           <p className="text-gray-600 m-0">Manage your admin accounts here.</p>
         </div>
         <div className="flex space-x-2">
@@ -260,7 +280,8 @@ export default function ManageAdminsPage() {
                     <SelectItem value="all">All Branches</SelectItem>
                     {loadingBranches ? (
                       <div className="p-2 text-sm text-gray-500">
-                        <Loader2 className="w-6 h-6 animate-spin" /> Loading branches...
+                        <Loader2 className="w-6 h-6 animate-spin" /> Loading
+                        branches...
                       </div>
                     ) : branches.length > 0 ? (
                       branches.map((branch) => (
@@ -269,7 +290,9 @@ export default function ManageAdminsPage() {
                         </SelectItem>
                       ))
                     ) : (
-                      <div className="p-2 text-sm text-gray-500">No branches available</div>
+                      <div className="p-2 text-sm text-gray-500">
+                        No branches available
+                      </div>
                     )}
                   </SelectGroup>
                 </SelectContent>
@@ -310,9 +333,15 @@ export default function ManageAdminsPage() {
                   <TableRow key={admin.id}>
                     <TableCell className="w-1/12">{index + 1}</TableCell>
                     <TableCell className="w-3/12">{admin.email}</TableCell>
-                    <TableCell className="w-2/12">{admin.phoneNumber}</TableCell>
-                    <TableCell className="w-2/12">{getBranchName(admin.branch)}</TableCell>
-                    <TableCell className="w-2/12">{getRoleName(admin.role)}</TableCell>
+                    <TableCell className="w-2/12">
+                      +234{admin.phoneNumber}
+                    </TableCell>
+                    <TableCell className="w-2/12">
+                      {getBranchName(admin.branch)}
+                    </TableCell>
+                    <TableCell className="w-2/12">
+                      {getRoleName(admin.role)}
+                    </TableCell>
                     <TableCell className="w-2/12">
                       <div className="flex items-center gap-2">
                         <Button
@@ -323,7 +352,7 @@ export default function ManageAdminsPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {admin.status === 'active' ? (
+                        {admin.status === "active" ? (
                           <Button
                             variant="ghost"
                             title="Restrict Admin"
@@ -331,8 +360,9 @@ export default function ManageAdminsPage() {
                             className="bg-red-600 text-white hover:bg-red-700"
                           >
                             <Lock className="h-4 w-4" />
-                          </Button>) :
-                          (<Button
+                          </Button>
+                        ) : (
+                          <Button
                             variant="ghost"
                             title="Activate Admin"
                             onClick={() => handleActivateAdmin(admin.id)}
@@ -340,7 +370,6 @@ export default function ManageAdminsPage() {
                           >
                             <ThumbsUp className="h-4 w-4" />
                           </Button>
-
                         )}
                         <Button
                           variant="ghost"
