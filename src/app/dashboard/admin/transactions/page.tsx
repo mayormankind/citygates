@@ -44,6 +44,7 @@ export default function TransactionsPage() {
   const [transactionStatusFilter, setTransactionStatusFilter] = useState<
     "all" | "pending" | "approved" | "declined"
   >("all");
+  const [planFilter, setPlanFilter] = useState<string>("all");
 
   // Fetch all users to map transaction user IDs
   useEffect(() => {
@@ -152,9 +153,15 @@ export default function TransactionsPage() {
       const matchesStatus =
         transactionStatusFilter === "all" ||
         trans.status === transactionStatusFilter;
-      return matchesCategory && matchesStatus;
+      const matchesPlan = planFilter === "all" || trans.planId === planFilter;
+      return matchesCategory && matchesStatus && matchesPlan;
     });
-  }, [transactions, transactionCategoryFilter, transactionStatusFilter]);
+  }, [
+    transactions,
+    transactionCategoryFilter,
+    transactionStatusFilter,
+    planFilter,
+  ]);
 
   const handleApproveTransaction = async (
     userId: string,
@@ -257,6 +264,22 @@ export default function TransactionsPage() {
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="declined">Declined</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              onValueChange={(value) => setPlanFilter(value)}
+              value={planFilter}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plans</SelectItem>
+                {plans.map((plan) => (
+                  <SelectItem key={plan.id} value={plan.id}>
+                    {plan.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
