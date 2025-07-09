@@ -898,7 +898,7 @@ export default function UsersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="deposits">Deposits</SelectItem>
+                      <SelectItem value="deposit">Deposits</SelectItem>
                       <SelectItem value="withdraw">Withdrawals</SelectItem>
                     </SelectContent>
                   </Select>
