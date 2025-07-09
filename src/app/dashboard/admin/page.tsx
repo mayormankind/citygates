@@ -23,7 +23,7 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Admin, Branch, Plan, Transaction, User, UserPlan } from "@/lib/types";
 import {
   collection,
@@ -216,9 +216,15 @@ export default function UsersPage() {
             createdAt: doc.data().createdAt?.toDate() || new Date(),
           })) as UserPlan[];
           setAssignedPlans(assignedPlansData);
+        },
+        (error) => {
+          console.error("Error fetching assigned plans:", error);
+          toast.error("Failed to load assigned plans.");
         }
       );
       return () => unsubscribeAssignedPlans();
+    } else {
+      setAssignedPlans([]);
     }
   }, [selectedUser]);
 
@@ -234,9 +240,15 @@ export default function UsersPage() {
             createdAt: doc.data().createdAt?.toDate() || new Date(),
           })) as Transaction[];
           setTransactions(transactionData);
+        },
+        (error) => {
+          console.error("Error fetching transactions:", error);
+          toast.error("Failed to load transactions.");
         }
       );
       return () => unsubscribeTransactions();
+    } else {
+      setTransactions([]);
     }
   }, [selectedUser]);
 
@@ -276,16 +288,21 @@ export default function UsersPage() {
   }, [transactions, transactionCategoryFilter, transactionStatusFilter]);
 
   // Calculate plan balance
-  const getPlanBalance = (planId: string) => {
-    if (!transactions) return 0;
-    return transactions
-      .filter((trans) => trans.planId === planId && trans.status === "approved")
-      .reduce((balance, trans) => {
-        return trans.transactionType === "deposit"
-          ? balance + trans.amount
-          : balance - trans.amount;
-      }, 0);
-  };
+  const getPlanBalance = useCallback(
+    (planId: string) => {
+      if (!transactions || !planId) return 0;
+      return transactions
+        .filter(
+          (trans) => trans.planId === planId && trans.status === "approved"
+        )
+        .reduce((balance, trans) => {
+          return trans.transactionType === "deposit"
+            ? balance + (trans.amount || 0)
+            : balance - (trans.amount || 0);
+        }, 0);
+    },
+    [transactions]
+  );
 
   const handleUserStatusChange = async (
     userId: string,
@@ -425,6 +442,10 @@ export default function UsersPage() {
   };
 
   const handleUserTransaction = async (type: "withdraw" | "deposit") => {
+    if (!assignedPlans.length) {
+      toast.error("No active plans to perform transactions.");
+      return;
+    }
     setTransactionType(type);
     setShowTransactionModal(true);
   };
@@ -440,6 +461,11 @@ export default function UsersPage() {
       toast.error(
         "Please select a plan and enter a valid amount greater than 0."
       );
+      return;
+    }
+    const balance = getPlanBalance(selectedPlanId);
+    if (transactionType === "withdraw" && amount > balance) {
+      toast.error("Insufficient balance for withdrawal.");
       return;
     }
     setLoading(true);
@@ -535,8 +561,7 @@ export default function UsersPage() {
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <Button onClick={() => setShowAddModal(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add New User
+            <Plus className="mr-2 h-4 w-4" /> Add New User
           </Button>
         </div>
       </div>
