@@ -106,9 +106,11 @@ export interface Role {
 
 export interface Transaction {
   id: string;
+  userId?: string;
   planId: string;
-  transactionType: string;
+  transactionType: "deposit" | "withdraw";
   amount: number;
-  status: string;
+  status: "pending" | "approved" | "declined";
   createdAt: Date;
+  UpdatedAt?: Date;
 }
