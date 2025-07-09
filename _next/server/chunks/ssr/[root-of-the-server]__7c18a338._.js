@@ -4844,7 +4844,8 @@ function UsersPage() {
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
-                                            onValueChange: setSelectedPlanId,
+                                            onValueChange: (value)=>setSelectedPlanId(value),
+                                            // id="plan-select"
                                             value: selectedPlanId,
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectTrigger"], {
@@ -4853,12 +4854,12 @@ function UsersPage() {
                                                         placeholder: "Select Plan"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                                        lineNumber: 1022,
+                                                        lineNumber: 1023,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                                    lineNumber: 1021,
+                                                    lineNumber: 1022,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -4868,19 +4869,19 @@ function UsersPage() {
                                                         children: "No plans available"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                                        lineNumber: 1026,
+                                                        lineNumber: 1027,
                                                         columnNumber: 23
                                                     }, this) : assignedPlans.map((plan)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
                                                             value: plan.id,
                                                             children: getAssignedPlanName(plan.planId)
                                                         }, plan.id, false, {
                                                             fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                                            lineNumber: 1031,
+                                                            lineNumber: 1032,
                                                             columnNumber: 25
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                                    lineNumber: 1024,
+                                                    lineNumber: 1025,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
@@ -4896,7 +4897,7 @@ function UsersPage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                            lineNumber: 1038,
+                                            lineNumber: 1039,
                                             columnNumber: 17
                                         }, this)
                                     ]
@@ -4912,7 +4913,7 @@ function UsersPage() {
                                             children: "Amount to Deposit"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                            lineNumber: 1043,
+                                            lineNumber: 1044,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -4922,13 +4923,13 @@ function UsersPage() {
                                             value: amount ?? ""
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                            lineNumber: 1044,
+                                            lineNumber: 1045,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                    lineNumber: 1042,
+                                    lineNumber: 1043,
                                     columnNumber: 15
                                 }, this)
                             ]
@@ -4947,7 +4948,7 @@ function UsersPage() {
                                             className: "mr-2 h-4 w-4 animate-spin"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                            lineNumber: 1059,
+                                            lineNumber: 1060,
                                             columnNumber: 21
                                         }, this),
                                         transactionType,
@@ -4956,12 +4957,12 @@ function UsersPage() {
                                 }, void 0, true) : `${transactionType}`
                             }, void 0, false, {
                                 fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                                lineNumber: 1053,
+                                lineNumber: 1054,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/dashboard/admin/page.tsx",
-                            lineNumber: 1052,
+                            lineNumber: 1053,
                             columnNumber: 13
                         }, this)
                     ]

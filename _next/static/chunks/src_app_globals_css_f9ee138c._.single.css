@@ -4874,18 +4874,6 @@
   }
 
   @media (width >= 40rem) {
-    .sm\:max-w-5xl {
-      max-width: var(--container-5xl);
-    }
-  }
-
-  @media (width >= 40rem) {
-    .sm\:max-w-6xl {
-      max-width: var(--container-6xl);
-    }
-  }
-
-  @media (width >= 40rem) {
     .sm\:max-w-\[400px\] {
       max-width: 400px;
     }

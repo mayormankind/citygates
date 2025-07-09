@@ -1015,7 +1015,8 @@ export default function UsersPage() {
               <div className="space-y-1">
                 <Label>Select Plan</Label>
                 <Select
-                  onValueChange={setSelectedPlanId}
+                  onValueChange={(value) => setSelectedPlanId(value)}
+                  // id="plan-select"
                   value={selectedPlanId}
                 >
                   <SelectTrigger className="w-full">
