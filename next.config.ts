@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     domains: ["res.cloudinary.com"],
   },
   // output: "export",
-  distDir: "_next",
+  // distDir: "_next",
   async redirects() {
     return [
       {
