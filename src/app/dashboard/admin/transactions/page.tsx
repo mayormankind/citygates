@@ -39,7 +39,7 @@ export default function TransactionsPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [transactionCategoryFilter, setTransactionCategoryFilter] = useState<
-    "all" | "deposits" | "withdrawals"
+    "all" | "deposit" | "withdraw"
   >("all");
   const [transactionStatusFilter, setTransactionStatusFilter] = useState<
     "all" | "pending" | "approved" | "declined"
@@ -145,10 +145,10 @@ export default function TransactionsPage() {
   // Memoized filtered transactions
   const filteredTransactions = useMemo(() => {
     return transactions.filter((trans) => {
+      const transType = trans.transactionType.toLowerCase();
       const matchesCategory =
         transactionCategoryFilter === "all" ||
-        trans.transactionType.toLowerCase() ===
-          transactionCategoryFilter.slice(0, -1);
+        transType === transactionCategoryFilter;
       const matchesStatus =
         transactionStatusFilter === "all" ||
         trans.status === transactionStatusFilter;
@@ -227,7 +227,7 @@ export default function TransactionsPage() {
             <Select
               onValueChange={(value) =>
                 setTransactionCategoryFilter(
-                  value as "all" | "deposits" | "withdrawals"
+                  value as "all" | "deposit" | "withdraw"
                 )
               }
               value={transactionCategoryFilter}
@@ -237,8 +237,8 @@ export default function TransactionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="deposits">Deposits</SelectItem>
-                <SelectItem value="withdrawals">Withdrawals</SelectItem>
+                <SelectItem value="deposit">Deposits</SelectItem>
+                <SelectItem value="withdraw">Withdrawals</SelectItem>
               </SelectContent>
             </Select>
             <Select

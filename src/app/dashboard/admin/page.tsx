@@ -124,7 +124,7 @@ export default function UsersPage() {
     "withdraw" | "deposit"
   >();
   const [transactionCategoryFilter, setTransactionCategoryFilter] = useState<
-    "all" | "deposits" | "withdrawals"
+    "all" | "deposit" | "withdraw"
   >("all");
   const [transactionStatusFilter, setTransactionStatusFilter] = useState<
     "all" | "pending" | "approved" | "declined"
@@ -262,20 +262,18 @@ export default function UsersPage() {
   };
 
   // Memoized filtered transactions
-  const filteredTransactions = useMemo(
-    () =>
-      transactions?.filter((trans) => {
-        const matchesCategory =
-          transactionCategoryFilter === "all" ||
-          trans.transactionType.toLowerCase() ===
-            transactionCategoryFilter.slice(0, -1);
-        const matchesStatus =
-          transactionStatusFilter === "all" ||
-          trans.status === transactionStatusFilter;
-        return matchesCategory && matchesStatus;
-      }) || [],
-    [transactions, transactionCategoryFilter, transactionStatusFilter]
-  );
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((trans) => {
+      const transType = trans.transactionType.toLowerCase();
+      const matchesCategory =
+        transactionCategoryFilter === "all" ||
+        transType === transactionCategoryFilter;
+      const matchesStatus =
+        transactionStatusFilter === "all" ||
+        trans.status === transactionStatusFilter;
+      return matchesCategory && matchesStatus;
+    });
+  }, [transactions, transactionCategoryFilter, transactionStatusFilter]);
 
   // Calculate plan balance
   const getPlanBalance = (planId: string) => {
@@ -450,7 +448,7 @@ export default function UsersPage() {
         collection(db, "users", selectedUser.id, "transactions")
       );
       await setDoc(userTransactionRef, {
-        planId: selectedPlanId, // Store the Plan ID
+        planId: selectedPlanId,
         transactionType: transactionType,
         amount: amount,
         status: "pending",
@@ -832,7 +830,7 @@ export default function UsersPage() {
             setAssignedPlanId("");
           }}
         >
-          <DialogContent className="sm:max-w-4xl">
+          <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-scroll">
             <DialogHeader>
               <DialogTitle>
                 Manage Transactions for {selectedUser.name}
@@ -865,7 +863,7 @@ export default function UsersPage() {
                   <Select
                     onValueChange={(value) =>
                       setTransactionCategoryFilter(
-                        value as "all" | "deposits" | "withdrawals"
+                        value as "all" | "deposit" | "withdraw"
                       )
                     }
                     value={transactionCategoryFilter}
@@ -876,7 +874,7 @@ export default function UsersPage() {
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
                       <SelectItem value="deposits">Deposits</SelectItem>
-                      <SelectItem value="withdrawals">Withdrawals</SelectItem>
+                      <SelectItem value="withdraw">Withdrawals</SelectItem>
                     </SelectContent>
                   </Select>
                   {/* Status filtering */}
@@ -984,7 +982,7 @@ export default function UsersPage() {
               )}
             </div>
             <DialogFooter className="flex items-center justify-between">
-              <div className="py-4 space-y-4 w-full">
+              <div className="py-4 space-y-4">
                 <PlanSelect
                   plans={plans}
                   value={assignedPlanId}
@@ -1003,6 +1001,7 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
       )}
+
       {showSubscribeModal && selectedUser && (
         <Dialog open={showSubscribeModal} onOpenChange={setShowSubscribeModal}>
           <DialogContent className="sm:max-w-[400px]">
@@ -1039,6 +1038,7 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
       )}
+
       {showTransactionModal && selectedUser && (
         <Dialog
           open={showTransactionModal}
