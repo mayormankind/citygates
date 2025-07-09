@@ -23,7 +23,7 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Admin, Branch, Plan, Transaction, User, UserPlan } from "@/lib/types";
 import {
   collection,
@@ -60,6 +60,40 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
+// Reusable PlanSelect component
+const PlanSelect = ({
+  plans,
+  value,
+  onValueChange,
+  placeholder,
+  disabled,
+}: {
+  plans: { id: string; name: string }[];
+  value: string;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+}) => (
+  <Select onValueChange={onValueChange} value={value} disabled={disabled}>
+    <SelectTrigger className="w-full">
+      <SelectValue placeholder={placeholder} />
+    </SelectTrigger>
+    <SelectContent>
+      {plans.length === 0 ? (
+        <SelectItem value="no value" disabled>
+          No plans available
+        </SelectItem>
+      ) : (
+        plans.map((plan) => (
+          <SelectItem key={plan.id} value={plan.id}>
+            {plan.name}
+          </SelectItem>
+        ))
+      )}
+    </SelectContent>
+  </Select>
+);
+
 export default function UsersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -80,7 +114,7 @@ export default function UsersPage() {
     useState(false);
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [transactions, setTransactions] = useState<Transaction[]>();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [assignedPlans, setAssignedPlans] = useState<UserPlan[]>([]);
@@ -96,7 +130,7 @@ export default function UsersPage() {
     "all" | "pending" | "approved" | "declined"
   >("all");
 
-  //fetch users
+  // Fetch users
   useEffect(() => {
     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
       const UsersData = snapshot.docs.map((doc) => ({
@@ -206,32 +240,54 @@ export default function UsersPage() {
     }
   }, [selectedUser]);
 
-  //get assigned plan name
-  const getAssignedPlanName = (planId: any) => {
-    const plan = plans.find((b) => b.id === planId);
-    return plan ? plan.name : planId;
+  // Get assigned plan name
+  const getAssignedPlanName = (planId: string) => {
+    const plan = plans.find((p) => p.id === planId);
+    return plan ? plan.name : "Unknown Plan";
   };
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Memoized filtered users
+  const filteredUsers = useMemo(
+    () =>
+      users.filter((user) =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [users, searchTerm]
   );
 
-  const getBranchName = (branchId: any) => {
+  // Get branch name
+  const getBranchName = (branchId: string) => {
     const branch = branches.find((b) => b.id === branchId);
     return branch ? branch.name : branchId;
   };
 
-  const filteredTransactions =
-    transactions?.filter((trans) => {
-      const matchesCategory =
-        transactionCategoryFilter === "all" ||
-        trans.transactionType.toLowerCase() ===
-          transactionCategoryFilter.slice(0, -1); // Remove 's' from "deposits" or "withdrawals"
-      const matchesStatus =
-        transactionStatusFilter === "all" ||
-        trans.status === transactionStatusFilter;
-      return matchesCategory && matchesStatus;
-    }) || [];
+  // Memoized filtered transactions
+  const filteredTransactions = useMemo(
+    () =>
+      transactions?.filter((trans) => {
+        const matchesCategory =
+          transactionCategoryFilter === "all" ||
+          trans.transactionType.toLowerCase() ===
+            transactionCategoryFilter.slice(0, -1);
+        const matchesStatus =
+          transactionStatusFilter === "all" ||
+          trans.status === transactionStatusFilter;
+        return matchesCategory && matchesStatus;
+      }) || [],
+    [transactions, transactionCategoryFilter, transactionStatusFilter]
+  );
+
+  // Calculate plan balance
+  const getPlanBalance = (planId: string) => {
+    if (!transactions) return 0;
+    return transactions
+      .filter((trans) => trans.planId === planId && trans.status === "approved")
+      .reduce((balance, trans) => {
+        return trans.transactionType === "deposit"
+          ? balance + trans.amount
+          : balance - trans.amount;
+      }, 0);
+  };
 
   const handleUserStatusChange = async (
     userId: string,
@@ -240,17 +296,17 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const userRef = doc(db, "users", userId);
-      setShowActivateModal(false);
-      setShowRestrictModal(false);
       await updateDoc(userRef, { status: newStatus });
       toast.success(
-        `User ${newStatus === "active" ? "activated" : newStatus} successfully!`
+        `User ${newStatus === "active" ? "activated" : "restricted"} successfully!`
       );
     } catch (error) {
       console.error("Error updating user status:", error);
       toast.error("Failed to update user status.");
     } finally {
       setLoading(false);
+      setShowActivateModal(false);
+      setShowRestrictModal(false);
     }
   };
 
@@ -304,7 +360,13 @@ export default function UsersPage() {
   };
 
   const handleSendMessage = (userId: string) => {
-    console.log("Send message to user:", userId);
+    const userToMessage = users.find((u) => u.id === userId);
+    if (userToMessage) {
+      setUserToMessage(userToMessage.name);
+      setShowUserMessageModal(true);
+    } else {
+      toast.error("User not found.");
+    }
   };
 
   const handleEditProfile = (userId: string) => {
@@ -317,11 +379,13 @@ export default function UsersPage() {
     }
   };
 
-  const handleRestrictUser = async (userId: string) => {
-    const userToActivate = users.find((u) => u.id === userId);
-    if (userToActivate) {
-      setSelectedUser(userToActivate);
+  const handleRestrictUser = (userId: string) => {
+    const userToRestrict = users.find((u) => u.id === userId);
+    if (userToRestrict) {
+      setSelectedUser(userToRestrict);
       setShowRestrictModal(true);
+    } else {
+      toast.error("User not found.");
     }
   };
 
@@ -335,6 +399,10 @@ export default function UsersPage() {
       toast.error("Please select a plan to subscribe.");
       return;
     }
+    if (assignedPlans.some((plan) => plan.planId === selectedPlanId)) {
+      toast.error("This plan is already assigned to the user.");
+      return;
+    }
     setLoading(true);
     try {
       const userPlanRef = doc(
@@ -342,9 +410,9 @@ export default function UsersPage() {
       );
       await setDoc(userPlanRef, {
         planId: selectedPlanId,
-        status: "pending", // Initial status
+        status: "pending",
         startDate: new Date(),
-        endDate: null, // To be set upon approval
+        endDate: null,
         createdAt: serverTimestamp(),
       });
       toast.success("User subscribed to plan successfully! Awaiting approval.");
@@ -382,19 +450,19 @@ export default function UsersPage() {
         collection(db, "users", selectedUser.id, "transactions")
       );
       await setDoc(userTransactionRef, {
-        planId: selectedPlanId,
+        planId: selectedPlanId, // Store the Plan ID
         transactionType: transactionType,
         amount: amount,
-        status: "pending", // Initial status
+        status: "pending",
         createdAt: serverTimestamp(),
       });
       toast.success(
-        `User ${transactionType} of ₦${amount} submitted successfully! Awaiting approval.`
+        `User ${transactionType} of ₦${amount.toLocaleString()} submitted successfully! Awaiting approval.`
       );
       setShowTransactionModal(false);
       setSelectedPlanId("");
-      setAmount(undefined); // Reset amount after successful submission
-      setTransactionType(undefined); // Reset transaction type
+      setAmount(undefined);
+      setTransactionType(undefined);
     } catch (error) {
       console.error(`Error completing user ${transactionType}:`, error);
       toast.error(`Failed to process ${transactionType}.`);
@@ -442,7 +510,10 @@ export default function UsersPage() {
         "transactions",
         transactionId
       );
-      await updateDoc(userTransactionRef, { status: "declined" });
+      await updateDoc(userTransactionRef, {
+        status: "declined",
+        updatedAt: serverTimestamp(),
+      });
       toast.success("Transaction declined successfully!");
     } catch (error) {
       console.error("Error declining transaction:", error);
@@ -450,17 +521,6 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getPlanBalance = (planId: string) => {
-    if (!transactions) return 0;
-    return transactions
-      .filter((trans) => trans.planId === planId && trans.status === "approved")
-      .reduce((balance, trans) => {
-        return trans.transactionType === "deposit"
-          ? balance + trans.amount
-          : balance - trans.amount;
-      }, 0);
   };
 
   return (
@@ -536,13 +596,13 @@ export default function UsersPage() {
                     <TableCell className="w-1/8">{user.name}</TableCell>
                     <TableCell className="w-1/8">{user.phoneNumber}</TableCell>
                     <TableCell className="w-1/8">
-                      {getBranchName(user.branch)}
+                      {getBranchName(user.branch ?? "")}
                     </TableCell>
                     <TableCell className="w-1/8">
-                      <Badge>{user.status}</Badge>
+                      <Badge className="capitalize">{user.status}</Badge>
                     </TableCell>
                     <TableCell className="w-1/8">
-                      <Badge>{user.kyc}</Badge>
+                      <Badge className="capitalize">{user.kyc}</Badge>
                     </TableCell>
                     <TableCell className="w-1/8">{user.admins}</TableCell>
                     <TableCell className="w-1/8">
@@ -750,14 +810,13 @@ export default function UsersPage() {
           user={selectedUser}
           adminsList={adminsList}
           onAdminsUpdate={() => {
-            setSelectedUser(null); // Refresh user data
+            setSelectedUser(null);
             setShowManageAdminsModal(false);
           }}
           loading={loading}
           setLoading={setLoading}
         />
       )}
-
       {showUserMessageModal && (
         <UserMessageModal
           open={showUserMessageModal}
@@ -765,11 +824,13 @@ export default function UsersPage() {
           userName={UserToMessage}
         />
       )}
-
       {showManageTransactionsModal && selectedUser && (
         <Dialog
           open={showManageTransactionsModal}
-          onOpenChange={setShowManageTransactionsModal}
+          onOpenChange={() => {
+            setShowManageTransactionsModal(false);
+            setAssignedPlanId("");
+          }}
         >
           <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
@@ -777,7 +838,7 @@ export default function UsersPage() {
                 Manage Transactions for {selectedUser.name}
               </DialogTitle>
               <DialogDescription>
-                View or manage the active plans for this user.
+                View or manage the active plans and transactions for this user.
               </DialogDescription>
             </DialogHeader>
             {assignedPlans && assignedPlans.length > 0 ? (
@@ -924,37 +985,24 @@ export default function UsersPage() {
             </div>
             <DialogFooter className="flex items-center justify-between">
               <div className="py-4 space-y-4 w-full">
-                <Select
-                  onValueChange={setAssignedPlanId}
+                <PlanSelect
+                  plans={plans}
                   value={assignedPlanId}
-                  // disabled={assignedPlans.length === 0}
-                >
-                  <SelectTrigger id="plan-select" aria-label="Select plan">
-                    <SelectValue placeholder={"Select Plan"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assignedPlans.length === 0 ? (
-                      <SelectItem value="no value" disabled>
-                        No plans available
-                      </SelectItem>
-                    ) : (
-                      assignedPlans.map((plan) => (
-                        <SelectItem key={plan.planId} value={plan.planId}>
-                          {getAssignedPlanName(plan.planId)}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  onValueChange={setAssignedPlanId}
+                  placeholder="Select Plan"
+                  disabled={plans.length === 0}
+                />
               </div>
-              <Button onClick={() => setShowSubscribeModal(true)}>
+              <Button
+                onClick={() => setShowSubscribeModal(true)}
+                disabled={plans.length === 0}
+              >
                 <Plus className="mr-2 h-4 w-4" /> Add Plan
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
-
       {showSubscribeModal && selectedUser && (
         <Dialog open={showSubscribeModal} onOpenChange={setShowSubscribeModal}>
           <DialogContent className="sm:max-w-[400px]">
@@ -965,18 +1013,13 @@ export default function UsersPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4 w-full">
-              <Select onValueChange={setSelectedPlanId} value={selectedPlanId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {plans.map((plan) => (
-                    <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <PlanSelect
+                plans={plans}
+                value={selectedPlanId}
+                onValueChange={setSelectedPlanId}
+                placeholder="Select Plan"
+                disabled={plans.length === 0}
+              />
             </div>
             <DialogFooter>
               <Button
@@ -996,11 +1039,15 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
       )}
-
       {showTransactionModal && selectedUser && (
         <Dialog
           open={showTransactionModal}
-          onOpenChange={setShowTransactionModal}
+          onOpenChange={() => {
+            setShowTransactionModal(false);
+            setSelectedPlanId("");
+            setAmount(undefined);
+            setTransactionType(undefined);
+          }}
         >
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -1014,46 +1061,41 @@ export default function UsersPage() {
             <div className="py-4 space-y-4 w-full">
               <div className="space-y-1">
                 <Label>Select Plan</Label>
-                <Select
-                  onValueChange={(value) => setSelectedPlanId(value)}
-                  // id="plan-select"
+                <PlanSelect
+                  plans={assignedPlans.map((plan) => ({
+                    id: plan.planId,
+                    name: getAssignedPlanName(plan.planId),
+                  }))}
                   value={selectedPlanId}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assignedPlans.length === 0 ? (
-                      <SelectItem value="no value" disabled>
-                        No plans available
-                      </SelectItem>
-                    ) : (
-                      assignedPlans.map((plan) => (
-                        <SelectItem key={plan.id} value={plan.id}>
-                          {getAssignedPlanName(plan.planId)}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  onValueChange={setSelectedPlanId}
+                  placeholder="Select Plan"
+                  disabled={assignedPlans.length === 0}
+                />
                 <p>
                   Balance: ₦{getPlanBalance(selectedPlanId).toLocaleString()}
                 </p>
               </div>
               <div className="space-y-1">
-                <Label>Amount to Deposit</Label>
+                <Label>Amount to {transactionType}</Label>
                 <Input
                   placeholder="Enter amount in Naira"
-                  onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                   type="number"
                   value={amount ?? ""}
+                  onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button
+                className="capitalize"
                 onClick={processUserTransaction}
-                disabled={loading || !selectedPlanId}
+                disabled={
+                  loading ||
+                  !selectedPlanId ||
+                  amount === undefined ||
+                  amount <= 0 ||
+                  isNaN(amount)
+                }
               >
                 {loading ? (
                   <>
