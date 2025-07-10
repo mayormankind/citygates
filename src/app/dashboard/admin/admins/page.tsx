@@ -199,34 +199,6 @@ export default function ManageAdminsPage() {
     }
   };
 
-  // const handleRestrictAdmin = async (adminId: string) => {
-  //   setLoadingAdmins(true);
-  //   try {
-  //     const adminRef = doc(db, "admins", adminId);
-  //     await updateDoc(adminRef, { status: "inactive" });
-  //     toast.success("Admin restricted successfully!");
-  //   } catch (error) {
-  //     console.error("Error restricting admin:", error);
-  //     toast.error("Failed to restrict admin.");
-  //   } finally {
-  //     setLoadingAdmins(false);
-  //   }
-  // };
-
-  // const handleActivateAdmin = async (adminId: string) => {
-  //   setLoadingAdmins(true);
-  //   try {
-  //     const adminRef = doc(db, "admins", adminId);
-  //     await updateDoc(adminRef, { status: "active" });
-  //     toast.success("Admin activated successfully!");
-  //   } catch (error) {
-  //     console.error("Error activating admin:", error);
-  //     toast.error("Failed to activate admin.");
-  //   } finally {
-  //     setLoadingAdmins(false);
-  //   }
-  // };
-
   const handleSendMessage = (adminEmail: string) => {
     setAdminMessageModal(true);
     setAdminToMessage(adminEmail);

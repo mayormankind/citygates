@@ -16,6 +16,8 @@ import {
   collection,
   serverTimestamp,
   getDocs,
+  setDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Admin, Branch, Role } from "@/lib/types"; // Added Role type
@@ -141,13 +143,15 @@ export default function CreateAdminModal({
         email: data.email,
         phoneNumber: data.phoneNumber,
         role: data.role,
+        userType: "Admin",
         branch: data.branch,
         status: "active",
         createdAt: serverTimestamp(),
         uid,
       };
 
-      await addDoc(collection(db, "admins"), adminData);
+      // Use setDoc with uid as the document ID
+      await setDoc(doc(db, "admins", uid), adminData);
 
       toast.success("Admin created", {
         description: `The admin has been successfully created ${emailResponse.success ? " (mock email sent)" : " and an email notification was sent"}.`,

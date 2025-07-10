@@ -91,6 +91,7 @@ export interface Admin {
   email: string;
   phoneNumber: string;
   role: string;
+  userType: "Admin" | "Super Admin";
   branch: string;
   status: string;
   createdAt: Date | FieldValue;

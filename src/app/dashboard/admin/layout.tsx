@@ -3,7 +3,7 @@
 import { BreadcrumbNav } from "@/components/layout/breadcrum-nav";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Sidebar } from "@/components/layout/sidebar";
-import { useUser } from "@/context/UserContext";
+import { useAuth } from "@/context/AdminContext";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,28 +15,24 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { userData, firebaseUser, loading } = useUser();
+  const { admin, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !firebaseUser) {
+    if (!loading && !admin) {
       router.push("/signin?tab=signin-as-admin");
-    } else {
-      router.push(`/dashboard/admin`);
     }
-  }, [firebaseUser, loading, router]);
+  }, [admin, loading, router]);
 
-  //   if (loading) {
-  //     return (
-  //       <div className="flex items-center justify-center min-h-screen">
-  //         <Loader2 className="h-8 w-8 animate-spin" />
-  //       </div>
-  //     )
-  //   }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
-  //   if (!firebaseUser) {
-  //     return null
-  //   }
+  if (!admin) return null;
 
   return (
     <div className="flex h-screen w-full bg-gray-50">
@@ -48,15 +44,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <Sidebar />
       </div>
       <div className="flex-1 md:ml-64 flex flex-col w-full">
-        {/* <DashboardHeader/> */}
         <main>
           <div className="p-4 md:p-6 space-y-4">
+            <DashboardHeader />
             <BreadcrumbNav />
             {children}
           </div>
         </main>
       </div>
-      {/* <Toaster richColors /> */}
+      <Toaster richColors position="top-center" />
     </div>
   );
 };

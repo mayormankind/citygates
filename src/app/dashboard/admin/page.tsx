@@ -789,6 +789,7 @@ export default function UsersPage() {
           Users={[]}
         />
       )}
+
       {showEditModal && selectedUser && (
         <EditUserModal
           open={showEditModal}
@@ -796,6 +797,7 @@ export default function UsersPage() {
           user={selectedUser}
         />
       )}
+
       {showKycModal && selectedUser && (
         <KycModal
           open={showKycModal}
@@ -806,6 +808,7 @@ export default function UsersPage() {
           setLoading={setLoading}
         />
       )}
+
       {showActivateModal && selectedUser && (
         <ActivateUserModal
           open={showActivateModal}
@@ -816,6 +819,7 @@ export default function UsersPage() {
           setLoading={setLoading}
         />
       )}
+
       {showRestrictModal && selectedUser && (
         <RestrictUserModal
           open={showRestrictModal}
@@ -826,6 +830,7 @@ export default function UsersPage() {
           setLoading={setLoading}
         />
       )}
+
       {showManageAdminsModal && selectedUser && (
         <ManageAdminsModal
           open={showManageAdminsModal}
@@ -840,6 +845,7 @@ export default function UsersPage() {
           setLoading={setLoading}
         />
       )}
+
       {showUserMessageModal && (
         <UserMessageModal
           open={showUserMessageModal}
@@ -847,6 +853,7 @@ export default function UsersPage() {
           userName={UserToMessage}
         />
       )}
+
       {showManageTransactionsModal && selectedUser && (
         <Dialog
           open={showManageTransactionsModal}
@@ -1009,11 +1016,14 @@ export default function UsersPage() {
             <DialogFooter className="flex items-center justify-between">
               <div className="py-4 space-y-4">
                 <PlanSelect
-                  plans={plans}
+                  plans={assignedPlans.map((plan) => ({
+                    id: plan.planId,
+                    name: getAssignedPlanName(plan.planId),
+                  }))}
                   value={assignedPlanId}
                   onValueChange={setAssignedPlanId}
                   placeholder="Select Plan"
-                  disabled={plans.length === 0}
+                  disabled={assignedPlans.length === 0}
                 />
               </div>
               <Button

@@ -243,7 +243,7 @@ export default function TransactionsPage() {
                 <SelectValue placeholder="Select Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="all">All Transactions</SelectItem>
                 <SelectItem value="deposit">Deposits</SelectItem>
                 <SelectItem value="withdraw">Withdrawals</SelectItem>
               </SelectContent>
@@ -260,7 +260,7 @@ export default function TransactionsPage() {
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="declined">Declined</SelectItem>
