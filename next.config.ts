@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["res.cloudinary.com"],
   },
+  env: {
+    TERMII_BASE_URL: process.env.TERMII_BASE_URL,
+    TERMII_API_KEY: process.env.TERMII_API_KEY,
+  },
   // output: "export",
   // distDir: "_next",
   async redirects() {

@@ -42,7 +42,7 @@ export interface Prospect {
   id: string;
   name: string;
   email: string;
-  phoneNumber: number;
+  phoneNumber: string;
   state: string;
   lga: string;
   streetAddress: string;
@@ -58,7 +58,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  phoneNumber: number;
+  phoneNumber: string;
   state: string;
   lga: string;
   streetAddress: string;
@@ -66,7 +66,7 @@ export interface User {
   role: string;
   status: string;
   kyc: string;
-  admins: number;
+  admins: string[];
   createdAt: Date;
   userPlans?: UserPlan[];
 }
@@ -115,3 +115,43 @@ export interface Transaction {
   createdAt: Date;
   UpdatedAt?: Date;
 }
+
+export type Permission =
+  | "View Roles"
+  | "Create Roles"
+  | "Edit Roles"
+  | "View Plans"
+  | "Create Plans"
+  | "Edit Plans"
+  | "Pause/Resume Plans"
+  | "View Users"
+  | "View Prospects"
+  | "Onboard Prospects"
+  | "Create User"
+  | "Edit User Profile"
+  | "Send Message"
+  | "Approve/Reject KYC"
+  | "Activate/Deactivate User"
+  | "Assign Admin"
+  | "Add New Plan"
+  | "Place Withdrawals"
+  | "Place Deposit"
+  | "View Transactions"
+  | "Approve/Reject Withdrawal"
+  | "Approve/Reject Deposit"
+  | "View Admins"
+  | "Create Admins"
+  | "Edit Profile"
+  | "Change Password"
+  | "Activate/Deactivate Admin"
+  | "View Branches"
+  | "Create Branch"
+  | "Edit Branch"
+  | "View Broadcasts"
+  | "Send Broadcasts"
+  | "View Products"
+  | "Create Product"
+  | "Delete Product"
+  | "Edit Product"
+  | "Hide/Show Product"
+  | "all";

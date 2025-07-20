@@ -20,7 +20,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   useEffect(() => {
     if (!loading && !admin) {
-      router.push("/signin?tab=signin-as-admin");
+      router.push("/auth/signin?tab=admin");
     }
   }, [admin, loading, router]);
 

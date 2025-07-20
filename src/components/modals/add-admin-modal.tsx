@@ -36,6 +36,7 @@ import * as z from "zod";
 import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 import { PasswordInput } from "../ui/password-input";
 import { sendEmail } from "@/lib/sendmail";
+import { useBranchRole } from "@/context/BranchRoleContext";
 
 const adminSchema = z
   .object({
@@ -65,9 +66,8 @@ export default function CreateAdminModal({
   onOpenChange,
 }: CreateAdminModalProps) {
   const [loading, setLoading] = useState(false);
-  const [roles, setRoles] = useState<Role[]>([]); // Changed to Role[] type
-  const [branches, setBranches] = useState<Branch[]>([]);
   const auth = getAuth();
+  const { roles, branches } = useBranchRole();
 
   const {
     control,
@@ -87,43 +87,6 @@ export default function CreateAdminModal({
     },
   });
 
-  // Fetch roles and branches from Firestore
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const rolesSnapshot = await getDocs(collection(db, "roles"));
-        const roleData = rolesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          name: doc.data().name || doc.id, // Use name field, fallback to id
-          permissions: doc.data().permissions || [],
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        })) as Role[];
-        setRoles(roleData);
-      } catch (error) {
-        console.error("Error fetching roles:", error);
-        toast.error("Failed to load roles");
-      }
-    };
-
-    const fetchBranches = async () => {
-      try {
-        const branchesSnapshot = await getDocs(collection(db, "branches"));
-        const branchData = branchesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          name: doc.data().name || doc.id,
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        })) as Branch[];
-        setBranches(branchData);
-      } catch (error) {
-        console.error("Error fetching branches:", error);
-        toast.error("Failed to load branches");
-      }
-    };
-
-    fetchRoles();
-    fetchBranches();
-  }, []);
-
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
@@ -136,7 +99,7 @@ export default function CreateAdminModal({
 
       const emailResponse = await sendEmail(data.email, {
         subject: "City Gates Bank Admin",
-        text: `You have been successfully registered as a Citygates Food Bank Admin. Your password to sign in at any time is ${data.password}.`,
+        text: `You have been successfully registered as a Citygates Food Bank Admin(${data.role}). Your password to sign in at any time is ${data.password}.`,
       });
 
       const adminData: Omit<Admin, "id"> = {

@@ -1,12 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Loader2 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { Admin, User } from '@/lib/types';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { Admin, User } from "@/lib/types";
+import { toast } from "sonner";
 
 interface ManageAdminsModalProps {
   open: boolean;
@@ -18,12 +31,18 @@ interface ManageAdminsModalProps {
   setLoading: (loading: boolean) => void;
 }
 
-export default function ManageAdminsModal({ open, onOpenChange, user, adminsList, onAdminsUpdate, loading, setLoading }: ManageAdminsModalProps) {
+export default function ManageAdminsModal({
+  open,
+  onOpenChange,
+  user,
+  adminsList,
+  onAdminsUpdate,
+  loading,
+  setLoading,
+}: ManageAdminsModalProps) {
   const [selectedAdmins, setSelectedAdmins] = useState<string[]>([]);
 
-  // Pre-select admins based on user's current admins (assuming admins is a count, not IDs)
   useEffect(() => {
-    // If admins is a count, we can't pre-select specific admins; adjust logic if admins is an array of IDs
     setSelectedAdmins([]);
   }, [user]);
 
@@ -36,9 +55,15 @@ export default function ManageAdminsModal({ open, onOpenChange, user, adminsList
     try {
       const userRef = doc(db, "users", user.id);
       await updateDoc(userRef, {
-        admins: selectedAdmins.length, // Update admins count based on selection
+        admins: selectedAdmins,
+        branch:
+          selectedAdmins.length > 0
+            ? adminsList.find((admin) => admin.id === selectedAdmins[0])?.branch
+            : null,
       });
-      toast.success(`Updated ${selectedAdmins.length} admin(s) for ${user.name}`);
+      toast.success(
+        `Updated ${selectedAdmins.length} admin(s) for ${user.name}`
+      );
       onAdminsUpdate();
     } catch (error) {
       console.error("Error updating admins:", error);
@@ -53,7 +78,9 @@ export default function ManageAdminsModal({ open, onOpenChange, user, adminsList
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Manage Admins for {user.name}</DialogTitle>
-          <DialogDescription>Assign or update admins for this user.</DialogDescription>
+          <DialogDescription>
+            Assign or update admins for this user.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div>
@@ -82,8 +109,21 @@ export default function ManageAdminsModal({ open, onOpenChange, user, adminsList
               {selectedAdmins.map((adminId) => {
                 const admin = adminsList.find((a) => a.id === adminId);
                 return admin ? (
-                  <span key={adminId} className="inline-block bg-gray-200 rounded-full px-2 py-1 mr-1 mb-1">
-                    {admin.email} <button onClick={() => setSelectedAdmins(selectedAdmins.filter((id) => id !== adminId))} className="ml-1 text-red-500">x</button>
+                  <span
+                    key={adminId}
+                    className="inline-block bg-gray-200 rounded-full px-2 py-1 mr-1 mb-1"
+                  >
+                    {admin.email}{" "}
+                    <button
+                      onClick={() =>
+                        setSelectedAdmins(
+                          selectedAdmins.filter((id) => id !== adminId)
+                        )
+                      }
+                      className="ml-1 text-red-500"
+                    >
+                      x
+                    </button>
                   </span>
                 ) : null;
               })}
@@ -91,7 +131,11 @@ export default function ManageAdminsModal({ open, onOpenChange, user, adminsList
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancel
           </Button>
           <Button

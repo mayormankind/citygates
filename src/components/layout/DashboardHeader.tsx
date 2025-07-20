@@ -15,7 +15,7 @@ import { auth } from "@/lib/firebaseConfig";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AdminContext";
 import { useBranchRole } from "@/context/BranchRoleContext";
-import { getBranchName, getRoleName } from "@/lib/utils";
+import { getRoleName } from "@/lib/utils";
 
 export function DashboardHeader() {
   const { admin, loading, setAdminManually } = useAuth();

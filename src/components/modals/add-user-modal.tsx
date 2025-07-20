@@ -138,7 +138,7 @@ export default function AddUserModal({
         branch: admin?.branch || "",
         status: "pending",
         kyc: "pending",
-        admins: 1,
+        admins: admin?.uid,
         createdAt: serverTimestamp(),
         role: "user",
         email: data.email,

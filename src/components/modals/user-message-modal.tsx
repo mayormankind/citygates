@@ -1,6 +1,12 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
@@ -10,8 +16,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { useState } from "react";
-import { sendEmail } from "@/lib/sendmail";
 import { Textarea } from "../ui/textarea";
+import { sendMessage } from "@/lib/sendmessage";
+import { User } from "@/lib/types";
 
 const userMessageSchema = z.object({
   message: z.string().min(5, "Message must be at least 5 characters long!"),
@@ -22,10 +29,14 @@ type UserMessageData = z.infer<typeof userMessageSchema>;
 interface UserMessageModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userName: string;
+  user: User | null;
 }
 
-export default function UserMessageModal({ open, onOpenChange, userName }: UserMessageModalProps) {
+export default function UserMessageModal({
+  open,
+  onOpenChange,
+  user,
+}: UserMessageModalProps) {
   const [loading, setLoading] = useState(false);
 
   const {
@@ -43,35 +54,46 @@ export default function UserMessageModal({ open, onOpenChange, userName }: UserM
     },
   });
 
-  const onSubmit = async (data: UserMessageData) => {
+  const notifyCustomer = async (data: UserMessageData) => {
     setLoading(true);
     try {
-        // await sendEmail(userName, {
-        //     subject: "",
-        //     text: data.message,
-        // })
-        toast.success(`Message has been sent to ${userName}`);
-        console.log(`Message has been sent to ${userName}`);
-        onOpenChange(false);
-        reset();
+      const formattedPhoneNumber = user?.phoneNumber?.replace("+", "") ?? "";
+      console.log("Sending to:", {
+        to: formattedPhoneNumber,
+        message: data.message,
+        from: "talert",
+      });
+      const response = await sendMessage(
+        formattedPhoneNumber,
+        data.message,
+        "talert"
+      );
+      console.log("Response:", response);
+      toast.success(`Message has been sent to ${user?.name}`);
+      console.log(`Message has been sent to ${user?.name}`);
+      onOpenChange(false);
+      reset();
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send message"
+      );
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] h-full max-h-[60vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Send Message</DialogTitle>
-          <DialogDescription> Send message to {userName}</DialogDescription>
+          <DialogDescription>Send message to {user?.name}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col space-y-4">
-
+        <form
+          onSubmit={handleSubmit(notifyCustomer)}
+          className="w-full flex flex-col space-y-4"
+        >
           <div className="space-y-1">
             <Label htmlFor="message">Message</Label>
             <Textarea
@@ -81,7 +103,11 @@ export default function UserMessageModal({ open, onOpenChange, userName }: UserM
               {...register("message")}
               disabled={loading}
             />
-            {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message.message}</p>}
+            {errors.message && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.message.message}
+              </p>
+            )}
           </div>
 
           <Button type="submit" disabled={loading}>

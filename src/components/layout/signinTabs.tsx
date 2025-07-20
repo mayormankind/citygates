@@ -184,7 +184,7 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
     email: "",
     password: "",
     phone: "",
-  }); // Renamed for clarity
+  });
   const router = useRouter();
   const { admin, loading: authLoading, setAdminManually } = useAuth();
 

@@ -1,4 +1,5 @@
 "use client";
+
 import { db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, DollarSign, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Loader2, ThumbsUp, ThumbsDown } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   collection,
@@ -19,7 +20,6 @@ import {
   query,
   where,
   updateDoc,
-  getDocs,
   serverTimestamp,
 } from "firebase/firestore";
 import { toast } from "sonner";
@@ -30,8 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plan, Transaction, User } from "@/lib/types";
+import { Plan, Transaction, User, Permission } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/context/AdminContext";
+import { useBranchRole } from "@/context/BranchRoleContext";
+import { getRoleName } from "@/lib/utils";
+import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 
 export default function TransactionsPage() {
   const [loading, setLoading] = useState(true);
@@ -45,11 +49,54 @@ export default function TransactionsPage() {
     "all" | "pending" | "approved" | "declined"
   >("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
+  const [roleType, setRoleType] = useState<"General" | "Branch" | "Assigned">(
+    "General"
+  );
 
-  // Fetch all users to map transaction user IDs
+  const { admin, permissions } = useAuth();
+  const { roles } = useBranchRole();
+  const role = getRoleName(admin?.role ?? "", roles);
+
+  // Check permissions
+  const hasPermission = (permission: Permission) =>
+    permissions.includes("all") || permissions.includes(permission);
+
+  // Fetch role type for Assigned role filtering
   useEffect(() => {
+    if (admin?.role) {
+      const roleRef = doc(db, "roles", admin.role);
+      const unsubscribe = onSnapshot(
+        roleRef,
+        (doc) => {
+          if (doc.exists()) {
+            setRoleType(doc.data().roleType || "General");
+          }
+        },
+        (error) => {
+          console.error("Error fetching role type:", error);
+          toast.error("Failed to load role type.");
+        }
+      );
+      return () => unsubscribe();
+    }
+  }, [admin?.role]);
+
+  // Fetch all users to map transaction user IDs and filter by branch/assigned
+  useEffect(() => {
+    const q = hasPermission("all")
+      ? collection(db, "users")
+      : roleType === "Assigned"
+        ? query(
+            collection(db, "users"),
+            where("admins", "array-contains", admin?.uid ?? "")
+          )
+        : query(
+            collection(db, "users"),
+            where("branch", "==", admin?.branch ?? "")
+          );
+
     const unsubscribeUsers = onSnapshot(
-      collection(db, "users"),
+      q,
       (snapshot) => {
         const usersData = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -64,7 +111,7 @@ export default function TransactionsPage() {
       }
     );
     return () => unsubscribeUsers();
-  }, []);
+  }, [admin?.branch, admin?.uid, roleType, permissions]);
 
   // Fetch plans
   useEffect(() => {
@@ -86,50 +133,60 @@ export default function TransactionsPage() {
     return () => unsubscribePlans();
   }, []);
 
-  // Fetch all transactions from all users
+  // Fetch transactions for allowed users
   useEffect(() => {
-    let allTransactions: Transaction[] = [];
     setLoading(true);
+    const unsubscribeTransactions: (() => void)[] = [];
 
     const fetchTransactions = async () => {
       try {
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const promises = usersSnapshot.docs.map(async (userDoc) => {
-          const q = query(collection(db, "users", userDoc.id, "transactions"));
-          const querySnapshot = await getDocs(q);
-          return querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate() || new Date(),
-            userId: userDoc.id,
-          })) as Transaction[];
-        });
-
-        const results = await Promise.all(promises);
-        allTransactions = results.flat();
-        setTransactions(allTransactions);
+        const transactionsData: Transaction[] = [];
+        for (const user of users) {
+          const userTransactionQuery = query(
+            collection(db, "users", user.id, "transactions")
+          );
+          const unsubscribe = onSnapshot(
+            userTransactionQuery,
+            (snapshot) => {
+              const userTransactions = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+                userId: user.id,
+                createdAt: doc.data().createdAt?.toDate() || new Date(),
+              })) as Transaction[];
+              setTransactions((prev) => {
+                const otherTransactions = prev.filter(
+                  (t) => t.userId !== user.id
+                );
+                return [...otherTransactions, ...userTransactions];
+              });
+            },
+            (error) => {
+              console.error(
+                `Error fetching transactions for user ${user.id}:`,
+                error
+              );
+              toast.error(`Failed to load transactions for user ${user.name}.`);
+            }
+          );
+          unsubscribeTransactions.push(unsubscribe);
+        }
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching transactions:", error);
+        console.error("Error setting up transaction listeners:", error);
         toast.error("Failed to load transactions.");
-      } finally {
         setLoading(false);
       }
     };
 
-    fetchTransactions();
+    if (users.length > 0) {
+      fetchTransactions();
+    } else {
+      setLoading(false);
+    }
 
-    // Real-time updates (optional, can be removed for performance if not needed)
-    const unsubscribeTransactions = onSnapshot(
-      query(collection(db, "users")),
-      () => fetchTransactions(),
-      (error) => {
-        console.error("Real-time error:", error);
-        toast.error("Error updating transactions.");
-      }
-    );
-
-    return () => unsubscribeTransactions();
-  }, []);
+    return () => unsubscribeTransactions.forEach((unsub) => unsub());
+  }, [users]);
 
   // Get plan name
   const getPlanName = (planId: string) => {
@@ -167,6 +224,27 @@ export default function TransactionsPage() {
     userId: string,
     transactionId: string
   ) => {
+    if (!userId || !transactionId) {
+      toast.error("Invalid transaction data.");
+      return;
+    }
+    const transaction = transactions.find(
+      (t) => t.id === transactionId && t.userId === userId
+    );
+    if (!transaction) {
+      toast.error("Transaction not found.");
+      return;
+    }
+    const requiredPermission =
+      transaction.transactionType === "deposit"
+        ? "Approve/Reject Deposit"
+        : "Approve/Reject Withdrawal";
+    if (!hasPermission(requiredPermission)) {
+      toast.error(
+        `You do not have permission to approve ${transaction.transactionType}s.`
+      );
+      return;
+    }
     setLoading(true);
     try {
       const userTransactionRef = doc(
@@ -193,6 +271,27 @@ export default function TransactionsPage() {
     userId: string,
     transactionId: string
   ) => {
+    if (!userId || !transactionId) {
+      toast.error("Invalid transaction data.");
+      return;
+    }
+    const transaction = transactions.find(
+      (t) => t.id === transactionId && t.userId === userId
+    );
+    if (!transaction) {
+      toast.error("Transaction not found.");
+      return;
+    }
+    const requiredPermission =
+      transaction.transactionType === "deposit"
+        ? "Approve/Reject Deposit"
+        : "Approve/Reject Withdrawal";
+    if (!hasPermission(requiredPermission)) {
+      toast.error(
+        `You do not have permission to decline ${transaction.transactionType}s.`
+      );
+      return;
+    }
     setLoading(true);
     try {
       const userTransactionRef = doc(
@@ -215,158 +314,170 @@ export default function TransactionsPage() {
     }
   };
 
-  return (
-    <div className="flex flex-col gap-8 p-4 md:px-8">
-      <div className="flex flex-col md:flex-row justify-between md:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">
-            Transactions
-          </h1>
-          <p className="text-gray-600 m-0">
-            View and manage all transactions across all users.
-          </p>
-        </div>
+  // Render action buttons based on permissions
+  const renderActionButtons = (trans: Transaction) => {
+    if (trans.status !== "pending") {
+      return <div className="text-gray-500">N/A</div>;
+    }
+    const requiredPermission =
+      trans.transactionType === "deposit"
+        ? "Approve/Reject Deposit"
+        : "Approve/Reject Withdrawal";
+    if (!hasPermission(requiredPermission)) {
+      return <div className="text-gray-500">N/A</div>;
+    }
+    return (
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => handleApproveTransaction(trans.userId ?? "", trans.id)}
+          aria-label="Approve transaction"
+          title="Approve"
+          className="bg-green-600 text-white hover:text-green-700"
+        >
+          <ThumbsUp className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          aria-label="Decline transaction"
+          title="Decline"
+          onClick={() => handleDeclineTransaction(trans.userId ?? "", trans.id)}
+          className="bg-red-600 text-white hover:text-red-700"
+        >
+          <ThumbsDown className="h-4 w-4" />
+        </Button>
       </div>
+    );
+  };
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-end gap-4 mb-6">
-            <Select
-              onValueChange={(value) =>
-                setTransactionCategoryFilter(
-                  value as "all" | "deposit" | "withdraw"
-                )
-              }
-              value={transactionCategoryFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Transactions</SelectItem>
-                <SelectItem value="deposit">Deposits</SelectItem>
-                <SelectItem value="withdraw">Withdrawals</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              onValueChange={(value) =>
-                setTransactionStatusFilter(
-                  value as "all" | "pending" | "approved" | "declined"
-                )
-              }
-              value={transactionStatusFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="declined">Declined</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              onValueChange={(value) => setPlanFilter(value)}
-              value={planFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Plan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Plans</SelectItem>
-                {plans.map((plan) => (
-                  <SelectItem key={plan.id} value={plan.id}>
-                    {plan.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+  return (
+    <ProtectedRoute requiredPermission="View Transactions">
+      <div className="flex flex-col gap-8 p-4 md:px-8">
+        <div className="flex flex-col md:flex-row justify-between md:items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">
+              Transactions
+            </h1>
+            <p className="text-gray-600 m-0">
+              View and manage all transactions across authorized users.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>S/N</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Plan Name</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex justify-end gap-4 mb-6">
+              <Select
+                onValueChange={(value) =>
+                  setTransactionCategoryFilter(
+                    value as "all" | "deposit" | "withdraw"
+                  )
+                }
+                value={transactionCategoryFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Transactions</SelectItem>
+                  <SelectItem value="deposit">Deposits</SelectItem>
+                  <SelectItem value="withdraw">Withdrawals</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={(value) =>
+                  setTransactionStatusFilter(
+                    value as "all" | "pending" | "approved" | "declined"
+                  )
+                }
+                value={transactionStatusFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="declined">Declined</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={(value) => setPlanFilter(value)}
+                value={planFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Plans</SelectItem>
+                  {plans.map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
-                    <div className="flex items-center justify-center">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading Transactions...
-                    </div>
-                  </TableCell>
+                  <TableHead>S/N</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Plan Name</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ) : filteredTransactions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-500">
-                    No transactions match the selected filters.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredTransactions.map((trans, id) => (
-                  <TableRow key={trans.id}>
-                    <TableCell>{id + 1}</TableCell>
-                    <TableCell>{getUserName(trans.userId ?? "")}</TableCell>
-                    <TableCell className="capitalize">
-                      {trans.transactionType}
-                    </TableCell>
-                    <TableCell>{getPlanName(trans.planId)}</TableCell>
-                    <TableCell>₦{trans.amount.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Badge className="capitalize">{trans.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {trans.status === "pending" && (
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            onClick={() =>
-                              handleApproveTransaction(
-                                trans.userId ?? "",
-                                trans.id
-                              )
-                            }
-                            aria-label="Approve transaction"
-                            title="Approve"
-                            className="bg-green-600 text-white hover:text-green-700"
-                          >
-                            <ThumbsUp className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            aria-label="Decline transaction"
-                            title="Decline"
-                            onClick={() =>
-                              handleDeclineTransaction(
-                                trans.userId ?? "",
-                                trans.id
-                              )
-                            }
-                            className="bg-red-600 text-white hover:text-red-700"
-                          >
-                            <ThumbsDown className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center">
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading Transactions...
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+                ) : filteredTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="text-center text-gray-500"
+                    >
+                      No transactions match the selected filters.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTransactions.map((trans, id) => (
+                    <TableRow key={trans.id}>
+                      <TableCell>{id + 1}</TableCell>
+                      <TableCell>{getUserName(trans.userId ?? "")}</TableCell>
+                      <TableCell className="capitalize">
+                        {trans.transactionType}
+                      </TableCell>
+                      <TableCell>{getPlanName(trans.planId)}</TableCell>
+                      <TableCell>₦{trans.amount.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge className="capitalize">{trans.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {trans.createdAt.toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{renderActionButtons(trans)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute>
   );
 }

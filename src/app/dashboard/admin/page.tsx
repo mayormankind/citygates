@@ -1,4 +1,5 @@
 "use client";
+
 import { db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -24,7 +25,15 @@ import {
   ThumbsDown,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Admin, Branch, Plan, Transaction, User, UserPlan } from "@/lib/types";
+import {
+  Admin,
+  Branch,
+  Plan,
+  Transaction,
+  User,
+  UserPlan,
+  Permission,
+} from "@/lib/types";
 import {
   collection,
   doc,
@@ -37,12 +46,11 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import AddUserModal from "@/components/modals/add-user-modal";
 import EditUserModal from "@/components/modals/edit-user-modal";
-import { Badge } from "@/components/ui/badge";
 import KycModal from "@/components/modals/kycModal";
 import ManageAdminsModal from "@/components/modals/manageAdminsModal";
 import ActivateUserModal from "@/components/modals/activateUserModal";
-import UserMessageModal from "@/components/modals/user-message-modal";
 import RestrictUserModal from "@/components/modals/restrictUserModal";
+import UserMessageModal from "@/components/modals/user-message-modal";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +67,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AdminContext";
+import { useBranchRole } from "@/context/BranchRoleContext";
+import { getRoleName } from "@/lib/utils";
+import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { Badge } from "@/components/ui/badge";
+// import { Badge } from "../ui/badge";
 
 // Reusable PlanSelect component
 const PlanSelect = ({
@@ -103,7 +117,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showManageAdminsModal, setShowManageAdminsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [UserToMessage, setUserToMessage] = useState("");
+  const [userToMessage, setUserToMessage] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [adminsList, setAdminsList] = useState<Admin[]>([]);
@@ -129,16 +143,36 @@ export default function UsersPage() {
   const [transactionStatusFilter, setTransactionStatusFilter] = useState<
     "all" | "pending" | "approved" | "declined"
   >("all");
+  const [roleType, setRoleType] = useState<"General" | "Branch" | "Assigned">(
+    "General"
+  );
+
+  const { admin, permissions } = useAuth();
+  const { roles } = useBranchRole();
+  const role = getRoleName(admin?.role ?? "", roles);
+
+  // Fetch role type for Assigned role filtering
+  useEffect(() => {
+    if (admin?.role) {
+      const roleRef = doc(db, "roles", admin.role);
+      const unsubscribe = onSnapshot(roleRef, (doc) => {
+        if (doc.exists()) {
+          setRoleType(doc.data().roleType || "General");
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [admin?.role]);
 
   // Fetch users
   useEffect(() => {
     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-      const UsersData = snapshot.docs.map((doc) => ({
+      const usersData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
       })) as User[];
-      setUsers(UsersData);
+      setUsers(usersData);
       setLoading(false);
     });
     return () => unsubscribeUsers();
@@ -258,20 +292,27 @@ export default function UsersPage() {
     return plan ? plan.name : "Unknown Plan";
   };
 
-  // Memoized filtered users
-  const filteredUsers = useMemo(
-    () =>
-      users.filter((user) =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [users, searchTerm]
-  );
-
   // Get branch name
   const getBranchName = (branchId: string) => {
     const branch = branches.find((b) => b.id === branchId);
     return branch ? branch.name : branchId;
   };
+
+  // Memoized filtered users
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch = user.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const isSuperAdmin = permissions.includes("all");
+      const matchesBranch = !admin?.branch || user.branch === admin.branch;
+      const matchesAssigned =
+        roleType !== "Assigned" || user.admins.includes(admin?.uid ?? "");
+      return (
+        matchesSearch && (isSuperAdmin || (matchesBranch && matchesAssigned))
+      );
+    });
+  }, [users, searchTerm, admin?.branch, admin?.uid, roleType, permissions]);
 
   // Memoized filtered transactions
   const filteredTransactions = useMemo(() => {
@@ -304,6 +345,10 @@ export default function UsersPage() {
     [transactions]
   );
 
+  // Check permissions
+  const hasPermission = (permission: Permission) =>
+    permissions.includes("all") || permissions.includes(permission);
+
   const handleUserStatusChange = async (
     userId: string,
     newStatus: "active" | "restricted"
@@ -328,7 +373,7 @@ export default function UsersPage() {
   const handleActivateUser = (userId: string) => {
     const userToActivate = users.find((u) => u.id === userId);
     if (userToActivate) {
-      if (userToActivate.admins === 0 || !userToActivate.admins) {
+      if (userToActivate.admins.length === 0) {
         setTimeout(() => {
           toast.info("Please click 'Manage Admins' to assign an admin.");
         }, 2000);
@@ -377,7 +422,7 @@ export default function UsersPage() {
   const handleSendMessage = (userId: string) => {
     const userToMessage = users.find((u) => u.id === userId);
     if (userToMessage) {
-      setUserToMessage(userToMessage.name);
+      setUserToMessage(userToMessage);
       setShowUserMessageModal(true);
     } else {
       toast.error("User not found.");
@@ -446,6 +491,14 @@ export default function UsersPage() {
       toast.error("No active plans to perform transactions.");
       return;
     }
+    if (type === "withdraw" && !hasPermission("Place Withdrawals")) {
+      toast.error("You do not have permission to place withdrawals.");
+      return;
+    }
+    if (type === "deposit" && !hasPermission("Place Deposit")) {
+      toast.error("You do not have permission to place deposits.");
+      return;
+    }
     setTransactionType(type);
     setShowTransactionModal(true);
   };
@@ -499,6 +552,21 @@ export default function UsersPage() {
     userId: string,
     transactionId: string
   ) => {
+    const transaction = transactions.find((t) => t.id === transactionId);
+    if (!transaction) {
+      toast.error("Transaction not found.");
+      return;
+    }
+    const requiredPermission =
+      transaction.transactionType === "deposit"
+        ? "Approve/Reject Deposit"
+        : "Approve/Reject Withdrawal";
+    if (!hasPermission(requiredPermission)) {
+      toast.error(
+        `You do not have permission to approve ${transaction.transactionType}s.`
+      );
+      return;
+    }
     setLoading(true);
     try {
       const userTransactionRef = doc(
@@ -525,6 +593,21 @@ export default function UsersPage() {
     userId: string,
     transactionId: string
   ) => {
+    const transaction = transactions.find((t) => t.id === transactionId);
+    if (!transaction) {
+      toast.error("Transaction not found.");
+      return;
+    }
+    const requiredPermission =
+      transaction.transactionType === "deposit"
+        ? "Approve/Reject Deposit"
+        : "Approve/Reject Withdrawal";
+    if (!hasPermission(requiredPermission)) {
+      toast.error(
+        `You do not have permission to decline ${transaction.transactionType}s.`
+      );
+      return;
+    }
     setLoading(true);
     try {
       const userTransactionRef = doc(
@@ -547,604 +630,601 @@ export default function UsersPage() {
     }
   };
 
-  return (
-    <div className="flex flex-col gap-8 p-4 md:px-8">
-      <div className="flex flex-col md:flex-row justify-between md:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">
-            Users
-          </h1>
-          <p className="text-gray-600 m-0">
-            Manage your users here. You can view, edit, and delete users
-            information.
-          </p>
-        </div>
-        <div className="flex space-x-2 mt-4 md:mt-0">
-          <Button onClick={() => setShowAddModal(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Add New User
-          </Button>
-        </div>
-      </div>
+  // Render action buttons based on user status and permissions
+  const renderActionButtons = (user: User) => {
+    const buttons = [];
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search users by name, email or phone Number..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+    if (
+      user.status === "pending" &&
+      user.kyc === "pending" &&
+      hasPermission("Approve/Reject KYC")
+    ) {
+      buttons.push(
+        <Button
+          key="kyc"
+          variant="ghost"
+          title="Finish KYC"
+          onClick={() => handleFinishKYC(user.id)}
+          className="bg-green-600 text-white hover:text-green-700"
+        >
+          <BadgeCheck className="h-4 w-4" />
+        </Button>
+      );
+    }
+
+    if (user.kyc === "approved") {
+      if (hasPermission("Activate/Deactivate User")) {
+        if (user.status === "pending" || user.status === "restricted") {
+          buttons.push(
+            <Button
+              key="activate"
+              variant="ghost"
+              title="Activate User"
+              onClick={() => handleActivateUser(user.id)}
+              className="bg-green-600 text-white hover:text-green-700"
+            >
+              <ThumbsUp className="h-4 w-4" />
+            </Button>
+          );
+        }
+        if (user.status === "active") {
+          buttons.push(
+            <Button
+              key="restrict"
+              variant="ghost"
+              title="Restrict User"
+              onClick={() => handleRestrictUser(user.id)}
+              className="bg-red-600 text-white hover:text-red-700"
+            >
+              <Lock className="h-4 w-4" />
+            </Button>
+          );
+        }
+      }
+      if (
+        hasPermission("Place Deposit") ||
+        hasPermission("Place Withdrawals")
+      ) {
+        buttons.push(
+          <Button
+            key="transactions"
+            variant="ghost"
+            title="Manage Transactions"
+            onClick={() => handleManageTransactions(user.id)}
+            className="bg-blue-600 text-white hover:text-blue-700"
+          >
+            <DollarSign className="h-4 w-4" />
+          </Button>
+        );
+      }
+      if (hasPermission("Assign Admin")) {
+        buttons.push(
+          <Button
+            key="admins"
+            variant="ghost"
+            title="Manage Admins"
+            onClick={() => handleManageAdmins(user.id)}
+            className="bg-purple-600 text-white hover:text-purple-700"
+          >
+            <Users className="h-4 w-4" />
+          </Button>
+        );
+      }
+      if (hasPermission("Send Message")) {
+        buttons.push(
+          <Button
+            key="message"
+            variant="ghost"
+            title="Send Message"
+            onClick={() => handleSendMessage(user.id)}
+            className="bg-orange-600 text-white hover:text-orange-700"
+          >
+            <MessageSquare className="h-4 w-4" />
+          </Button>
+        );
+      }
+      if (hasPermission("Edit User Profile")) {
+        buttons.push(
+          <Button
+            key="edit"
+            variant="ghost"
+            title="Edit Profile"
+            onClick={() => handleEditProfile(user.id)}
+            className="bg-blue-600 text-white hover:text-blue-700"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        );
+      }
+    }
+
+    return buttons.length > 0 ? (
+      buttons
+    ) : (
+      <div className="text-gray-500">N/A</div>
+    );
+  };
+
+  return (
+    <ProtectedRoute requiredPermission="View Users">
+      <div className="flex flex-col gap-8 p-4 md:px-8">
+        <div className="flex flex-col md:flex-row justify-between md:items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 m-0 text-start">
+              Users
+            </h1>
+            <p className="text-gray-600 m-0">
+              Manage your users here. You can view, edit, and delete users
+              information.
+            </p>
+          </div>
+          <div className="flex space-x-2 mt-4 md:mt-0">
+            {hasPermission("Create User") && (
+              <Button onClick={() => setShowAddModal(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Add New User
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search users by name, email or phone Number..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-1/8">S/N</TableHead>
-                <TableHead className="w-1/8">Name</TableHead>
-                <TableHead className="w-1/8">Phone Number</TableHead>
-                <TableHead className="w-1/8">Branch</TableHead>
-                <TableHead className="w-1/8">Status</TableHead>
-                <TableHead className="w-1/8">KYC</TableHead>
-                <TableHead className="w-1/8">ADMINS</TableHead>
-                <TableHead className="w-1/8">ACTIONS</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center">
-                    <div className="flex items-center justify-center">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading Users...
-                    </div>
-                  </TableCell>
+                  <TableHead className="w-1/8">S/N</TableHead>
+                  <TableHead className="w-1/8">Name</TableHead>
+                  <TableHead className="w-1/8">Phone Number</TableHead>
+                  <TableHead className="w-1/8">Branch</TableHead>
+                  <TableHead className="w-1/8">Status</TableHead>
+                  <TableHead className="w-1/8">KYC</TableHead>
+                  <TableHead className="w-1/8">Admins</TableHead>
+                  <TableHead className="w-1/8">Actions</TableHead>
                 </TableRow>
-              ) : users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center">
-                    No users available. Please add a user.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredUsers.map((user, id) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="w-1/8">{id + 1}</TableCell>
-                    <TableCell className="w-1/8">{user.name}</TableCell>
-                    <TableCell className="w-1/8">{user.phoneNumber}</TableCell>
-                    <TableCell className="w-1/8">
-                      {getBranchName(user.branch ?? "")}
-                    </TableCell>
-                    <TableCell className="w-1/8">
-                      <Badge className="capitalize">{user.status}</Badge>
-                    </TableCell>
-                    <TableCell className="w-1/8">
-                      <Badge className="capitalize">{user.kyc}</Badge>
-                    </TableCell>
-                    <TableCell className="w-1/8">{user.admins}</TableCell>
-                    <TableCell className="w-1/8">
-                      <div className="flex items-center gap-2">
-                        {user.status === "pending" && user.kyc === "pending" ? (
-                          <Button
-                            variant="ghost"
-                            title="Finish KYC"
-                            onClick={() => handleFinishKYC(user.id)}
-                            className="bg-green-600 text-white hover:text-green-700"
-                          >
-                            <BadgeCheck className="h-4 w-4" />
-                          </Button>
-                        ) : user.kyc === "approved" &&
-                          user.status === "pending" ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              title="Activate User"
-                              onClick={() => handleActivateUser(user.id)}
-                              className="bg-green-600 text-white hover:text-green-700"
-                            >
-                              <ThumbsUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Manage Transactions"
-                              onClick={() => handleManageTransactions(user.id)}
-                              className="bg-blue-600 text-white hover:text-blue-700"
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Manage Admins"
-                              onClick={() => handleManageAdmins(user.id)}
-                              className="bg-purple-600 text-white hover:text-purple-700"
-                            >
-                              <Users className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Send Message"
-                              onClick={() => handleSendMessage(user.id)}
-                              className="bg-orange-600 text-white hover:text-orange-700"
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Edit Profile"
-                              onClick={() => handleEditProfile(user.id)}
-                              className="bg-blue-600 text-white hover:text-blue-700"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : user.kyc === "approved" &&
-                          user.status === "active" ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              title="Restrict User"
-                              onClick={() => handleRestrictUser(user.id)}
-                              className="bg-red-600 text-white hover:text-red-700"
-                            >
-                              <Lock className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Manage Transactions"
-                              onClick={() => handleManageTransactions(user.id)}
-                              className="bg-blue-600 text-white hover:text-blue-700"
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Manage Admins"
-                              onClick={() => handleManageAdmins(user.id)}
-                              className="bg-purple-600 text-white hover:text-purple-700"
-                            >
-                              <Users className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Send Message"
-                              onClick={() => handleSendMessage(user.id)}
-                              className="bg-orange-600 text-white hover:text-orange-700"
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Edit Profile"
-                              onClick={() => handleEditProfile(user.id)}
-                              className="bg-blue-600 text-white hover:text-blue-700"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : user.kyc === "approved" &&
-                          user.status === "restricted" ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              title="Activate User"
-                              onClick={() => handleActivateUser(user.id)}
-                              className="bg-green-600 text-white hover:text-green-700"
-                            >
-                              <ThumbsUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Manage Transactions"
-                              onClick={() => handleManageTransactions(user.id)}
-                              className="bg-blue-600 text-white hover:text-blue-700"
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Manage Admins"
-                              onClick={() => handleManageAdmins(user.id)}
-                              className="bg-purple-600 text-white hover:text-purple-700"
-                            >
-                              <Users className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Send Message"
-                              onClick={() => handleSendMessage(user.id)}
-                              className="bg-orange-600 text-white hover:text-orange-700"
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              title="Edit Profile"
-                              onClick={() => handleEditProfile(user.id)}
-                              className="bg-blue-600 text-white hover:text-blue-700"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : null}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center">
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading Users...
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {showAddModal && (
-        <AddUserModal
-          open={showAddModal}
-          onOpenChange={setShowAddModal}
-          Users={[]}
-        />
-      )}
-
-      {showEditModal && selectedUser && (
-        <EditUserModal
-          open={showEditModal}
-          onOpenChange={setShowEditModal}
-          user={selectedUser}
-        />
-      )}
-
-      {showKycModal && selectedUser && (
-        <KycModal
-          open={showKycModal}
-          onOpenChange={setShowKycModal}
-          user={selectedUser}
-          onKycUpdate={handleKycUpdate}
-          loading={loading}
-          setLoading={setLoading}
-        />
-      )}
-
-      {showActivateModal && selectedUser && (
-        <ActivateUserModal
-          open={showActivateModal}
-          onOpenChange={setShowActivateModal}
-          user={selectedUser}
-          onActivate={handleUserStatusChange}
-          loading={loading}
-          setLoading={setLoading}
-        />
-      )}
-
-      {showRestrictModal && selectedUser && (
-        <RestrictUserModal
-          open={showRestrictModal}
-          onOpenChange={setShowRestrictModal}
-          user={selectedUser}
-          onActivate={handleUserStatusChange}
-          loading={loading}
-          setLoading={setLoading}
-        />
-      )}
-
-      {showManageAdminsModal && selectedUser && (
-        <ManageAdminsModal
-          open={showManageAdminsModal}
-          onOpenChange={setShowManageAdminsModal}
-          user={selectedUser}
-          adminsList={adminsList}
-          onAdminsUpdate={() => {
-            setSelectedUser(null);
-            setShowManageAdminsModal(false);
-          }}
-          loading={loading}
-          setLoading={setLoading}
-        />
-      )}
-
-      {showUserMessageModal && (
-        <UserMessageModal
-          open={showUserMessageModal}
-          onOpenChange={setShowUserMessageModal}
-          userName={UserToMessage}
-        />
-      )}
-
-      {showManageTransactionsModal && selectedUser && (
-        <Dialog
-          open={showManageTransactionsModal}
-          onOpenChange={() => {
-            setShowManageTransactionsModal(false);
-            setAssignedPlanId("");
-          }}
-        >
-          <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-scroll">
-            <DialogHeader>
-              <DialogTitle>
-                Manage Transactions for {selectedUser.name}
-              </DialogTitle>
-              <DialogDescription>
-                View or manage the active plans and transactions for this user.
-              </DialogDescription>
-            </DialogHeader>
-            {assignedPlans && assignedPlans.length > 0 ? (
-              <div className="flex justify-between">
-                <div className="flex items-center gap-4">
-                  <Button
-                    className="bg-green-300 text-black hover:bg-green-400 rounded-4xl"
-                    onClick={() => handleUserTransaction("deposit")}
-                  >
-                    <DollarSign className="h-4 w-4" />
-                    Deposit
-                  </Button>
-                  <Button
-                    className="bg-blue-300 text-black hover:bg-blue-400 rounded-4xl"
-                    onClick={() => handleUserTransaction("withdraw")}
-                  >
-                    <DollarSign className="h-4 w-4" />
-                    Withdraw
-                  </Button>
-                </div>
-                {/* category filter */}
-                <div className="flex justify-end gap-4">
-                  {/* Transactions category */}
-                  <Select
-                    onValueChange={(value) =>
-                      setTransactionCategoryFilter(
-                        value as "all" | "deposit" | "withdraw"
-                      )
-                    }
-                    value={transactionCategoryFilter}
-                  >
-                    <SelectTrigger className="w-[180px] mt-4">
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="deposit">Deposits</SelectItem>
-                      <SelectItem value="withdraw">Withdrawals</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {/* Status filtering */}
-                  <Select
-                    onValueChange={(value) =>
-                      setTransactionStatusFilter(
-                        value as "all" | "pending" | "approved" | "declined"
-                      )
-                    }
-                    value={transactionStatusFilter}
-                  >
-                    <SelectTrigger className="w-[180px] mt-4">
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="declined">Declined</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ) : null}
-            <div className="py-4">
-              {assignedPlans && assignedPlans.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>S/N</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Plan Name</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                ) : filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center">
+                      No users available. Please add a user.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredUsers.map((user, id) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="w-1/8">{id + 1}</TableCell>
+                      <TableCell className="w-1/8">{user.name}</TableCell>
+                      <TableCell className="w-1/8">
+                        {user.phoneNumber}
+                      </TableCell>
+                      <TableCell className="w-1/8">
+                        {getBranchName(user.branch ?? "")}
+                      </TableCell>
+                      <TableCell className="w-1/8">
+                        <Badge className="capitalize">{user.status}</Badge>
+                      </TableCell>
+                      <TableCell className="w-1/8">
+                        <Badge className="capitalize">{user.kyc}</Badge>
+                      </TableCell>
+                      <TableCell className="w-1/8">
+                        {user.admins.length}
+                      </TableCell>
+                      <TableCell className="w-1/8">
+                        <div className="flex items-center gap-2">
+                          {renderActionButtons(user)}
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTransactions.length > 0 ? (
-                      filteredTransactions.map((trans, id) => (
-                        <TableRow key={trans.id}>
-                          <TableCell>{id + 1}</TableCell>
-                          <TableCell className="capitalize">
-                            {trans.transactionType}
-                          </TableCell>
-                          <TableCell>
-                            {getAssignedPlanName(trans.planId)}
-                          </TableCell>
-                          <TableCell>
-                            ₦{trans.amount.toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className="capitalize">{trans.status}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            {trans.status === "pending" && (
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  onClick={() =>
-                                    handleApproveTransaction(
-                                      selectedUser.id,
-                                      trans.id
-                                    )
-                                  }
-                                  aria-label="Approve transaction"
-                                  title="Approve"
-                                  className="bg-green-600 text-white hover:text-green-700"
-                                >
-                                  <ThumbsUp className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  aria-label="Decline transaction"
-                                  title="Decline"
-                                  onClick={() =>
-                                    handleDeclineTransaction(
-                                      selectedUser.id,
-                                      trans.id
-                                    )
-                                  }
-                                  className="bg-red-600 text-white hover:text-red-700"
-                                >
-                                  <ThumbsDown className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {showAddModal && (
+          <AddUserModal
+            open={showAddModal}
+            onOpenChange={setShowAddModal}
+            Users={[]}
+          />
+        )}
+
+        {showEditModal && selectedUser && (
+          <EditUserModal
+            open={showEditModal}
+            onOpenChange={setShowEditModal}
+            user={selectedUser}
+          />
+        )}
+
+        {showKycModal && selectedUser && (
+          <KycModal
+            open={showKycModal}
+            onOpenChange={setShowKycModal}
+            user={selectedUser}
+            onKycUpdate={handleKycUpdate}
+            loading={loading}
+            setLoading={setLoading}
+          />
+        )}
+
+        {showActivateModal && selectedUser && (
+          <ActivateUserModal
+            open={showActivateModal}
+            onOpenChange={setShowActivateModal}
+            user={selectedUser}
+            onActivate={handleUserStatusChange}
+            loading={loading}
+            setLoading={setLoading}
+          />
+        )}
+
+        {showRestrictModal && selectedUser && (
+          <RestrictUserModal
+            open={showRestrictModal}
+            onOpenChange={setShowRestrictModal}
+            user={selectedUser}
+            onActivate={handleUserStatusChange}
+            loading={loading}
+            setLoading={setLoading}
+          />
+        )}
+
+        {showManageAdminsModal && selectedUser && (
+          <ManageAdminsModal
+            open={showManageAdminsModal}
+            onOpenChange={setShowManageAdminsModal}
+            user={selectedUser}
+            adminsList={adminsList}
+            onAdminsUpdate={() => {
+              setSelectedUser(null);
+              setShowManageAdminsModal(false);
+            }}
+            loading={loading}
+            setLoading={setLoading}
+          />
+        )}
+
+        {showUserMessageModal && userToMessage && (
+          <UserMessageModal
+            open={showUserMessageModal}
+            onOpenChange={setShowUserMessageModal}
+            user={userToMessage}
+          />
+        )}
+
+        {showManageTransactionsModal && selectedUser && (
+          <Dialog
+            open={showManageTransactionsModal}
+            onOpenChange={() => {
+              setShowManageTransactionsModal(false);
+              setAssignedPlanId("");
+            }}
+          >
+            <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-scroll">
+              <DialogHeader>
+                <DialogTitle>
+                  Manage Transactions for {selectedUser.name}
+                </DialogTitle>
+                <DialogDescription>
+                  View or manage the active plans and transactions for this
+                  user.
+                </DialogDescription>
+              </DialogHeader>
+              {assignedPlans && assignedPlans.length > 0 ? (
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-4">
+                    {hasPermission("Place Deposit") && (
+                      <Button
+                        className="bg-green-300 text-black hover:bg-green-400 rounded-4xl"
+                        onClick={() => handleUserTransaction("deposit")}
+                      >
+                        <DollarSign className="h-4 w-4" />
+                        Deposit
+                      </Button>
+                    )}
+                    {hasPermission("Place Withdrawals") && (
+                      <Button
+                        className="bg-blue-300 text-black hover:bg-blue-400 rounded-4xl"
+                        onClick={() => handleUserTransaction("withdraw")}
+                      >
+                        <DollarSign className="h-4 w-4" />
+                        Withdraw
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-4">
+                    <Select
+                      onValueChange={(value) =>
+                        setTransactionCategoryFilter(
+                          value as "all" | "deposit" | "withdraw"
+                        )
+                      }
+                      value={transactionCategoryFilter}
+                    >
+                      <SelectTrigger className="w-[180px] mt-4">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="deposit">Deposits</SelectItem>
+                        <SelectItem value="withdraw">Withdrawals</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      onValueChange={(value) =>
+                        setTransactionStatusFilter(
+                          value as "all" | "pending" | "approved" | "declined"
+                        )
+                      }
+                      value={transactionStatusFilter}
+                    >
+                      <SelectTrigger className="w-[180px] mt-4">
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="declined">Declined</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : null}
+              <div className="py-4">
+                {assignedPlans && assignedPlans.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>S/N</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Plan Name</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.length > 0 ? (
+                        filteredTransactions.map((trans, id) => (
+                          <TableRow key={trans.id}>
+                            <TableCell>{id + 1}</TableCell>
+                            <TableCell className="capitalize">
+                              {trans.transactionType}
+                            </TableCell>
+                            <TableCell>
+                              {getAssignedPlanName(trans.planId)}
+                            </TableCell>
+                            <TableCell>
+                              ₦{trans.amount.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className="capitalize">
+                                {trans.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {trans.status === "pending" &&
+                              (hasPermission("Approve/Reject Deposit") ||
+                                hasPermission("Approve/Reject Withdrawal")) ? (
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() =>
+                                      handleApproveTransaction(
+                                        selectedUser.id,
+                                        trans.id
+                                      )
+                                    }
+                                    aria-label="Approve transaction"
+                                    title="Approve"
+                                    className="bg-green-600 text-white hover:text-green-700"
+                                  >
+                                    <ThumbsUp className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    aria-label="Decline transaction"
+                                    title="Decline"
+                                    onClick={() =>
+                                      handleDeclineTransaction(
+                                        selectedUser.id,
+                                        trans.id
+                                      )
+                                    }
+                                    className="bg-red-600 text-white hover:text-red-700"
+                                  >
+                                    <ThumbsDown className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="text-gray-500">N/A</div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-gray-500"
+                          >
+                            No transactions match the selected filters.
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={6}
-                          className="text-center text-gray-500"
-                        >
-                          No transactions match the selected filters.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-center text-gray-500">No active plan yet.</p>
-              )}
-            </div>
-            <DialogFooter className="flex items-center justify-between">
-              <div className="py-4 space-y-4">
-                <PlanSelect
-                  plans={assignedPlans.map((plan) => ({
-                    id: plan.planId,
-                    name: getAssignedPlanName(plan.planId),
-                  }))}
-                  value={assignedPlanId}
-                  onValueChange={setAssignedPlanId}
-                  placeholder="Select Plan"
-                  disabled={assignedPlans.length === 0}
-                />
-              </div>
-              <Button
-                onClick={() => setShowSubscribeModal(true)}
-                disabled={plans.length === 0}
-              >
-                <Plus className="mr-2 h-4 w-4" /> Add Plan
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {showSubscribeModal && selectedUser && (
-        <Dialog open={showSubscribeModal} onOpenChange={setShowSubscribeModal}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Subscribe User</DialogTitle>
-              <DialogDescription>
-                Select a plan to subscribe {selectedUser.name} to.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4 space-y-4 w-full">
-              <PlanSelect
-                plans={plans}
-                value={selectedPlanId}
-                onValueChange={setSelectedPlanId}
-                placeholder="Select Plan"
-                disabled={plans.length === 0}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={handleSubscribeUser}
-                disabled={loading || !selectedPlanId}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Subscribing...
-                  </>
+                      )}
+                    </TableBody>
+                  </Table>
                 ) : (
-                  "Subscribe User"
+                  <p className="text-center text-gray-500">
+                    No active plan yet.
+                  </p>
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+              </div>
+              <DialogFooter className="flex items-center justify-between">
+                <div className="py-4 space-y-4">
+                  <PlanSelect
+                    plans={assignedPlans.map((plan) => ({
+                      id: plan.planId,
+                      name: getAssignedPlanName(plan.planId),
+                    }))}
+                    value={assignedPlanId}
+                    onValueChange={setAssignedPlanId}
+                    placeholder="Select Plan"
+                    disabled={assignedPlans.length === 0}
+                  />
+                </div>
+                {hasPermission("Add New Plan") && (
+                  <Button
+                    onClick={() => setShowSubscribeModal(true)}
+                    disabled={plans.length === 0}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add Plan
+                  </Button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
-      {showTransactionModal && selectedUser && (
-        <Dialog
-          open={showTransactionModal}
-          onOpenChange={() => {
-            setShowTransactionModal(false);
-            setSelectedPlanId("");
-            setAmount(undefined);
-            setTransactionType(undefined);
-          }}
-        >
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle className="capitalize">
-                {transactionType} Funds
-              </DialogTitle>
-              <DialogDescription>
-                You are making a {transactionType} for {selectedUser.name}.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4 space-y-4 w-full">
-              <div className="space-y-1">
-                <Label>Select Plan</Label>
+        {showSubscribeModal && selectedUser && (
+          <Dialog
+            open={showSubscribeModal}
+            onOpenChange={setShowSubscribeModal}
+          >
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Subscribe User</DialogTitle>
+                <DialogDescription>
+                  Select a plan to subscribe {selectedUser.name} to.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 space-y-4 w-full">
                 <PlanSelect
-                  plans={assignedPlans.map((plan) => ({
-                    id: plan.planId,
-                    name: getAssignedPlanName(plan.planId),
-                  }))}
+                  plans={plans}
                   value={selectedPlanId}
                   onValueChange={setSelectedPlanId}
                   placeholder="Select Plan"
-                  disabled={assignedPlans.length === 0}
-                />
-                <p>
-                  Balance: ₦{getPlanBalance(selectedPlanId).toLocaleString()}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <Label>Amount to {transactionType}</Label>
-                <Input
-                  placeholder="Enter amount in Naira"
-                  type="number"
-                  value={amount ?? ""}
-                  onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                  disabled={plans.length === 0}
                 />
               </div>
-            </div>
-            <DialogFooter>
-              <Button
-                className="capitalize"
-                onClick={processUserTransaction}
-                disabled={
-                  loading ||
-                  !selectedPlanId ||
-                  amount === undefined ||
-                  amount <= 0 ||
-                  isNaN(amount)
-                }
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {transactionType}ing...
-                  </>
-                ) : (
-                  `${transactionType}`
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
+              <DialogFooter>
+                <Button
+                  onClick={handleSubscribeUser}
+                  disabled={loading || !selectedPlanId}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Subscribing...
+                    </>
+                  ) : (
+                    "Subscribe User"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {showTransactionModal && selectedUser && (
+          <Dialog
+            open={showTransactionModal}
+            onOpenChange={() => {
+              setShowTransactionModal(false);
+              setSelectedPlanId("");
+              setAmount(undefined);
+              setTransactionType(undefined);
+            }}
+          >
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="capitalize">
+                  {transactionType} Funds
+                </DialogTitle>
+                <DialogDescription>
+                  You are making a {transactionType} for {selectedUser.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 space-y-4 w-full">
+                <div className="space-y-1">
+                  <Label>Select Plan</Label>
+                  <PlanSelect
+                    plans={assignedPlans.map((plan) => ({
+                      id: plan.planId,
+                      name: getAssignedPlanName(plan.planId),
+                    }))}
+                    value={selectedPlanId}
+                    onValueChange={setSelectedPlanId}
+                    placeholder="Select Plan"
+                    disabled={assignedPlans.length === 0}
+                  />
+                  <p>
+                    Balance: ₦{getPlanBalance(selectedPlanId).toLocaleString()}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label>Amount to {transactionType}</Label>
+                  <Input
+                    placeholder="Enter amount in Naira"
+                    type="number"
+                    value={amount ?? ""}
+                    onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  className="capitalize"
+                  onClick={processUserTransaction}
+                  disabled={
+                    loading ||
+                    !selectedPlanId ||
+                    amount === undefined ||
+                    amount <= 0 ||
+                    isNaN(amount)
+                  }
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {transactionType}ing...
+                    </>
+                  ) : (
+                    `${transactionType}`
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+    </ProtectedRoute>
   );
 }
