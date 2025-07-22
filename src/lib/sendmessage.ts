@@ -9,7 +9,7 @@ interface SendMessageResponse {
 export async function sendMessage(
   to: string,
   message: string,
-  from: string = "talert"
+  from: string = "CityGates"
 ): Promise<SendMessageResponse> {
   if (!process.env.TERMII_BASE_URL || !process.env.TERMII_API_KEY) {
     throw new Error(

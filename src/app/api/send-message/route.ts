@@ -1,21 +1,3 @@
-// //app/api/send-message/route.ts
-
-// import { NextResponse } from "next/server";
-// import { sendMessage } from "@/lib/sendmessage";
-
-// export async function POST(request: Request) {
-//   const { to, message, from } = await request.json();
-//   try {
-//     const response = await sendMessage(to, message, from);
-//     return NextResponse.json(response);
-//   } catch (error) {
-//     return NextResponse.json(
-//       { error: (error as Error).message },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 import { NextResponse } from "next/server";
 import { sendMessage } from "@/lib/sendmessage";
 

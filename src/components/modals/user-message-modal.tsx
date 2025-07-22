@@ -61,12 +61,12 @@ export default function UserMessageModal({
       console.log("Sending to:", {
         to: formattedPhoneNumber,
         message: data.message,
-        from: "talert",
+        from: "CityGates",
       });
       const response = await sendMessage(
         formattedPhoneNumber,
         data.message,
-        "talert"
+        "CityGates"
       );
       console.log("Response:", response);
       toast.success(`Message has been sent to ${user?.name}`);
