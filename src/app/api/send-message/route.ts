@@ -1,3 +1,5 @@
+// src/app/api/send-message/route.ts
+
 import { NextResponse } from "next/server";
 import { sendMessage } from "@/lib/sendmessage";
 

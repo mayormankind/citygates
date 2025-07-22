@@ -1,3 +1,4 @@
+// src/components/UserMessageModal.tsx
 "use client";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,11 +14,9 @@ import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Textarea } from "../ui/textarea";
-import { sendMessage } from "@/lib/sendmessage";
 import { User } from "@/lib/types";
 
 const userMessageSchema = z.object({
@@ -44,9 +43,6 @@ export default function UserMessageModal({
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
-    watch,
-    control,
   } = useForm<UserMessageData>({
     resolver: zodResolver(userMessageSchema),
     defaultValues: {
@@ -64,6 +60,7 @@ export default function UserMessageModal({
         from: "CityGates",
       });
 
+      // Call the Next.js API route instead of sendMessage directly
       const response = await fetch("/api/send-message", {
         method: "POST",
         headers: {
@@ -83,7 +80,6 @@ export default function UserMessageModal({
 
       const result = await response.json();
       console.log("Response:", result);
-
       toast.success(`Message has been sent to ${user?.name}`);
       console.log(`Message has been sent to ${user?.name}`);
       onOpenChange(false);

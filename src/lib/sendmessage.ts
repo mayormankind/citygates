@@ -1,3 +1,4 @@
+// lib/sendMessage.ts
 interface SendMessageResponse {
   code: string;
   message_id: string;
