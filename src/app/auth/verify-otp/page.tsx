@@ -1,4 +1,6 @@
 // app/auth/verify-otp/page.tsx
+"use client";
+
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +10,6 @@ import Link from "next/link";
 import { Label } from "@/components/ui/label";
 
 // Client Component for OTP verification logic
-("use client");
-
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
