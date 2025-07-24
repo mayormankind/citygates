@@ -1,6 +1,8 @@
+// src/app/dashboard/admin/page.tsx
+
 "use client";
 
-import { db } from "@/lib/firebaseConfig";
+import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -72,7 +74,6 @@ import { useBranchRole } from "@/context/BranchRoleContext";
 import { getRoleName } from "@/lib/utils";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
-// import { Badge } from "../ui/badge";
 
 // Reusable PlanSelect component
 const PlanSelect = ({
@@ -351,18 +352,81 @@ export default function UsersPage() {
 
   const handleUserStatusChange = async (
     userId: string,
+    user: User,
     newStatus: "active" | "restricted"
   ) => {
     setLoading(true);
     try {
       const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, { status: newStatus });
+      const currentUser = await auth.currentUser?.getIdToken();
+      console.log(currentUser);
+
+      if (newStatus === "active") {
+        // Create Firebase Auth user
+        const response = await fetch("/api/create-auth-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
+          },
+          body: JSON.stringify({
+            phoneNumber: user.phoneNumber,
+            displayName: user.name,
+            email: user.email,
+            userId: user.id,
+          }),
+        });
+
+        console.log(response);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to create auth user");
+        }
+
+        const { uid } = await response.json();
+        console.log("Created Auth user with UID:", uid);
+
+        // Update Firestore user document with Auth UID
+        await updateDoc(userRef, {
+          uid,
+          status: newStatus,
+          updatedAt: serverTimestamp(),
+        });
+
+        // Send confirmation SMS
+        const smsResponse = await fetch("/api/send-message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: user.phoneNumber.replace("+", ""),
+            message: `Welcome to CityGates Food Bank, ${user.name}! Your account is now active. Log in with your phone number at ${process.env.NEXT_PUBLIC_APP_URL}/auth/signin.`,
+            from: "CityGates",
+          }),
+        });
+
+        if (!smsResponse.ok) {
+          const errorData = await smsResponse.json();
+          throw new Error(errorData.error || "Failed to send confirmation SMS");
+        }
+      } else {
+        await updateDoc(userRef, {
+          status: newStatus,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
       toast.success(
         `User ${newStatus === "active" ? "activated" : "restricted"} successfully!`
       );
-    } catch (error) {
-      console.error("Error updating user status:", error);
-      toast.error("Failed to update user status.");
+    } catch (error: any) {
+      console.error("Error in handleUserStatusChange:", {
+        message: error.message,
+        stack: error.stack,
+      });
+      toast.error(error.message || "Failed to update user status.");
     } finally {
       setLoading(false);
       setShowActivateModal(false);

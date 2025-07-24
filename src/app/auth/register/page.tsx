@@ -16,7 +16,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { db } from "@/lib/firebaseConfig";
 import { State, User } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+} from "firebase/firestore";
 import { CheckCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -111,13 +118,32 @@ export default function Register() {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
+      const usersRef = collection(db, "users");
+      const [phoneQuery, emailQuery] = await Promise.all([
+        getDocs(
+          query(usersRef, where("phoneNumber", "==", `+234${data.phoneNumber}`))
+        ),
+        getDocs(query(usersRef, where("email", "==", data.email))),
+      ]);
+
+      if (!phoneQuery.empty) {
+        toast.error("Phone number already in use.");
+        setLoading(false);
+        return;
+      }
+      if (!emailQuery.empty) {
+        toast.error("Email address already in use.");
+        setLoading(false);
+        return;
+      }
+
       const storeData = {
         name: `${data.firstName} ${data.lastName}`,
         phoneNumber: `+234${data.phoneNumber}`,
         branch: "",
         status: "pending",
         kyc: "pending",
-        admins: 0,
+        admins: [],
         createdAt: serverTimestamp(),
         role: "user",
         email: data.email,
@@ -314,16 +340,6 @@ export default function Register() {
                 </p>
               )}
             </div>
-
-            {/* <div>
-              <Input
-                placeholder="Branch (optional)"
-                className="shadow-none"
-                {...register('branch')}
-                disabled={loading}
-              />
-              {errors.branch && <p className="text-red-500 text-xs mt-1">{errors.branch.message}</p>}
-            </div> */}
 
             <p className="text-gray-500 text-xs">
               After registration, you will be contacted by one of our team

@@ -1,3 +1,5 @@
+// lib/types.ts
+
 import { FieldValue } from "firebase/firestore";
 
 export interface Plan {
@@ -27,34 +29,7 @@ export interface State {
   lgas: string[];
 }
 
-// export interface Prospect {
-//     id: string
-//     name: string
-//     amount: number
-//     image: string
-//     status: string
-//     tenure: number
-//     description: string
-//     createdAt: Date
-// }
-
 export interface Prospect {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber: string;
-  state: string;
-  lga: string;
-  streetAddress: string;
-  branch?: string;
-  role: string;
-  status: string;
-  kyc: string;
-  admins: number;
-  createdAt: Date;
-}
-
-export interface User {
   id: string;
   name: string;
   email: string;
@@ -68,6 +43,24 @@ export interface User {
   kyc: string;
   admins: string[];
   createdAt: Date;
+}
+
+export interface User {
+  uid: string;
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  state: string;
+  lga: string;
+  streetAddress: string;
+  branch?: string;
+  role: string;
+  status: string;
+  kyc: string;
+  admins: string[];
+  createdAt: Date;
+  UpdatedAt: FieldValue | Date;
   userPlans?: UserPlan[];
 }
 

@@ -7,17 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Textarea } from "../ui/textarea";
-import { sendMessage } from "@/lib/sendmessage";
 import { User } from "@/lib/types";
 
 const userMessageSchema = z.object({

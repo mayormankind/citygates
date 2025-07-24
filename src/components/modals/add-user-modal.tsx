@@ -1,3 +1,5 @@
+"use client";
+
 import { Camera, Loader2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
@@ -15,8 +17,11 @@ import { toast } from "sonner";
 import {
   addDoc,
   collection,
+  getDocs,
   onSnapshot,
+  query,
   serverTimestamp,
+  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Admin, State, User } from "@/lib/types";
@@ -126,12 +131,29 @@ export default function AddUserModal({
     }
   }, [watchedState, selectedState, setValue]);
 
-  console.log(admin);
-
   // Handle form submission
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
+      const usersRef = collection(db, "users");
+      const [phoneQuery, emailQuery] = await Promise.all([
+        getDocs(
+          query(usersRef, where("phoneNumber", "==", `+234${data.phoneNumber}`))
+        ),
+        getDocs(query(usersRef, where("email", "==", data.email))),
+      ]);
+
+      if (!phoneQuery.empty) {
+        toast.error("Phone number already in use.");
+        setLoading(false);
+        return;
+      }
+      if (!emailQuery.empty) {
+        toast.error("Email address already in use.");
+        setLoading(false);
+        return;
+      }
+
       const storeData = {
         name: `${data.firstName} ${data.lastName}`,
         phoneNumber: `+234${data.phoneNumber}`,
@@ -314,26 +336,6 @@ export default function AddUserModal({
               </p>
             )}
           </div>
-
-          <div>
-            <Input
-              placeholder="Branch (optional)"
-              className="shadow-none"
-              {...register("branch")}
-              disabled={loading}
-            />
-            {errors.branch && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.branch.message}
-              </p>
-            )}
-          </div>
-
-          <p className="text-gray-500 text-xs">
-            After registration, you will be contacted by one of our team members
-            to facilitate your physical onboarding and complete KYC. Please wait
-            to be contacted!
-          </p>
 
           <Button type="submit" disabled={loading}>
             {loading ? (

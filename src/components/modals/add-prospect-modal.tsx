@@ -1,32 +1,69 @@
-import { Camera, Loader2 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Input } from '../ui/input';
-import { toast } from 'sonner';
-import { addDoc, collection, deleteDoc, doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { Branch, Prospect, State, User } from '@/lib/types';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
-import { Textarea } from '../ui/textarea';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+"use client";
+
+import { Camera, Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { toast } from "sonner";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  where,
+} from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { Branch, Prospect, State } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Textarea } from "../ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useAuth } from "@/context/AdminContext";
 
 const userSchema = z.object({
-  branch: z.string().min(1, 'Assign a branch to this user'),
-  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50, 'First name is too long'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50, 'Last name is too long'),
-  email: z.string().email('Invalid email address'),
+  branch: z.string().min(1, "Assign a branch to this user"),
+  firstName: z
+    .string()
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name is too long"),
+  lastName: z
+    .string()
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name is too long"),
+  email: z.string().email("Invalid email address"),
   // phoneNumber: z
   //   .string()
   //   .regex(/^\d{10}$/, 'Phone number must be 10 digits (excluding +234)'),
   phoneNumber: z
-    .string().min(10,'Phone number must be 10 digits (excluding +234)'),
-  state: z.string().min(1, 'Please select a state'),
-  lga: z.string().min(1, 'Please select a local government area'),
-  streetAddress: z.string().min(5, 'Street address must be at least 5 characters').max(200, 'Street address is too long'),
+    .string()
+    .min(10, "Phone number must be 10 digits (excluding +234)"),
+  state: z.string().min(1, "Please select a state"),
+  lga: z.string().min(1, "Please select a local government area"),
+  streetAddress: z
+    .string()
+    .min(5, "Street address must be at least 5 characters")
+    .max(200, "Street address is too long"),
 });
 
 type FormData = z.infer<typeof userSchema>;
@@ -34,17 +71,21 @@ type FormData = z.infer<typeof userSchema>;
 interface UserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: Prospect; // Pass the user object to edit
+  user: Prospect;
 }
 
-export default function AddProspectModal({ open, onOpenChange, user }: UserModalProps) {
+export default function AddProspectModal({
+  open,
+  onOpenChange,
+  user,
+}: UserModalProps) {
   const [loading, setLoading] = useState(false);
   const [states, setStates] = useState<State[]>([]);
-  const [selectedState, setSelectedState] = useState(user.state || '');
+  const [selectedState, setSelectedState] = useState(user.state || "");
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [branches, setBranches] = useState<Branch[]>([]);
-  
-  // Initialize react-hook-form with Zod resolver
+  const { admin } = useAuth();
+
   const {
     register,
     handleSubmit,
@@ -57,28 +98,31 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
     defaultValues: {
       email: user.email,
       phoneNumber: String(user.phoneNumber),
-      firstName: user.name.split(' ')[0] || '',
-      lastName: user.name.split(' ')[1] || '',
-      state: user.state || '',
-      lga: user.lga || '',
-      streetAddress: user.streetAddress || '',
-      branch: ''
+      firstName: user.name.split(" ")[0] || "",
+      lastName: user.name.split(" ")[1] || "",
+      state: user.state || "",
+      lga: user.lga || "",
+      streetAddress: user.streetAddress || "",
+      branch: "",
     },
   });
 
-  const watchedState = watch('state');
+  const watchedState = watch("state");
 
   // Fetch states on component mount
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const response = await fetch('https://nigerian-states-and-lga.vercel.app/');
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const response = await fetch(
+          "https://nigerian-states-and-lga.vercel.app/"
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         setStates(data || []);
       } catch (error) {
-        console.error('Fetch error:', error);
-        toast.error('Failed to load states');
+        console.error("Fetch error:", error);
+        toast.error("Failed to load states");
       }
     };
     fetchStates();
@@ -88,26 +132,30 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
   useEffect(() => {
     if (watchedState !== selectedState) {
       setSelectedState(watchedState);
-      setValue('lga', '');
+      setValue("lga", "");
     }
   }, [watchedState, selectedState, setValue]);
 
   // Fetch branches
   useEffect(() => {
     setLoadingBranches(true);
-    const unsubscribeBranches = onSnapshot(collection(db, "branches"), (snapshot) => {
-      const branchesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name || doc.id,
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as Branch[];
-      setBranches(branchesData);
-      setLoadingBranches(false);
-    }, (error) => {
-      console.error("Error fetching branches:", error);
-      toast.error("Failed to load branches.");
-      setLoadingBranches(false);
-    });
+    const unsubscribeBranches = onSnapshot(
+      collection(db, "branches"),
+      (snapshot) => {
+        const branchesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name || doc.id,
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+        })) as Branch[];
+        setBranches(branchesData);
+        setLoadingBranches(false);
+      },
+      (error) => {
+        console.error("Error fetching branches:", error);
+        toast.error("Failed to load branches.");
+        setLoadingBranches(false);
+      }
+    );
     return () => unsubscribeBranches();
   }, []);
 
@@ -115,28 +163,44 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
+      const usersRef = collection(db, "users");
+      const [phoneQuery, emailQuery] = await Promise.all([
+        getDocs(query(usersRef, where("phoneNumber", "==", data.phoneNumber))),
+        getDocs(query(usersRef, where("email", "==", data.email))),
+      ]);
+
+      if (!phoneQuery.empty) {
+        toast.error("Phone number already in use.");
+        setLoading(false);
+        return;
+      }
+      if (!emailQuery.empty) {
+        toast.error("Email address already in use.");
+        setLoading(false);
+        return;
+      }
+
       const storeData = {
         name: `${data.firstName} ${data.lastName}`,
         phoneNumber: data.phoneNumber,
-        branch: data.branch || '',
-        status: 'pending',
-        kyc: 'pending',
-        admins: 0,
+        branch: data.branch,
+        status: "pending",
+        kyc: "pending",
+        admins: admin?.uid ? [admin.uid] : [],
         createdAt: serverTimestamp(),
-        role: 'user',
+        role: "user",
         email: data.email,
         state: data.state,
         lga: data.lga,
         streetAddress: data.streetAddress,
       };
-    
-      await addDoc(collection(db, 'users'), storeData);
-      await deleteDoc(doc(db,"prospects", user.id))
-    
-      toast.success('User created', {
-        description: 'The user has been successfully created.',
-      });
 
+      await addDoc(collection(db, "users"), storeData);
+      await deleteDoc(doc(db, "prospects", user.id));
+
+      toast.success("User created", {
+        description: "The user has been successfully created.",
+      });
 
       reset({
         firstName: data.firstName,
@@ -147,9 +211,9 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
       });
       onOpenChange(false);
     } catch (error) {
-      console.error('Submission error:', error);
-      toast.error('Error', {
-        description: 'Failed to update the user.',
+      console.error("Submission error:", error);
+      toast.error("Error", {
+        description: "Failed to update the user.",
       });
     } finally {
       setLoading(false);
@@ -161,14 +225,20 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
       <DialogContent className="sm:max-w-[425px] h-full max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Assign User</DialogTitle>
-          <DialogDescription>Update the details of the selected user.</DialogDescription>
+          <DialogDescription>
+            Update the details of the selected user.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col space-y-4">
-
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-full flex flex-col space-y-4"
+        >
           <div className="space-y-1">
             <Label htmlFor="branch">Branch</Label>
-            <Select onValueChange={(value) => setValue('branch', value)}
-              value={watch('branch')}>
+            <Select
+              onValueChange={(value) => setValue("branch", value)}
+              value={watch("branch")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Branch" />
               </SelectTrigger>
@@ -177,20 +247,27 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
                   <SelectLabel>Branches</SelectLabel>
                   {loadingBranches ? (
                     <div className="p-2 text-sm text-gray-500">
-                      <Loader2 className="w-6 h-6 animate-spin" /> Loading branches...
+                      <Loader2 className="w-6 h-6 animate-spin" /> Loading
+                      branches...
                     </div>
                   ) : branches.length > 0 ? (
                     branches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </SelectItem>
                     ))
                   ) : (
-                    <div className="p-2 text-sm text-gray-500">No branches available</div>
+                    <div className="p-2 text-sm text-gray-500">
+                      No branches available
+                    </div>
                   )}
                 </SelectGroup>
               </SelectContent>
             </Select>
             {errors.branch && (
-                <p className="text-red-500 text-xs mt-1">{errors.branch.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.branch.message}
+              </p>
             )}
           </div>
           <div className="space-y-1">
@@ -201,11 +278,13 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
                 <Input
                   placeholder="Enter phone number (10 digits)"
                   className="shadow-none"
-                  {...register('phoneNumber')}
+                  {...register("phoneNumber")}
                   disabled={loading}
                 />
                 {errors.phoneNumber && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.phoneNumber.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -217,12 +296,16 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
               type="email"
               placeholder="Email Address"
               className="shadow-none"
-              {...register('email')}
+              {...register("email")}
               disabled={loading}
             />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
-          
+
           <div className="flex gap-2">
             <div className="flex-1">
               <Label htmlFor="firstName">First Name</Label>
@@ -230,10 +313,14 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
                 id="firstName"
                 placeholder="First Name"
                 className="shadow-none"
-                {...register('firstName')}
+                {...register("firstName")}
                 disabled={loading}
               />
-              {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
+              {errors.firstName && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.firstName.message}
+                </p>
+              )}
             </div>
             <div className="flex-1">
               <Label htmlFor="lastName">Last Name</Label>
@@ -241,18 +328,22 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
                 id="lastName"
                 placeholder="Last Name"
                 className="shadow-none"
-                {...register('lastName')}
+                {...register("lastName")}
                 disabled={loading}
               />
-              {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
+              {errors.lastName && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.lastName.message}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="state">State</Label>
             <Select
-              onValueChange={(value) => setValue('state', value)}
-              value={watch('state')}
+              onValueChange={(value) => setValue("state", value)}
+              value={watch("state")}
               disabled={loading}
             >
               <SelectTrigger className="w-full border py-4">
@@ -268,20 +359,26 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="p-2 text-sm text-gray-500">Loading states...</div>
+                    <div className="p-2 text-sm text-gray-500">
+                      Loading states...
+                    </div>
                   )}
                 </SelectGroup>
               </SelectContent>
             </Select>
-            {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
+            {errors.state && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.state.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="lga">Local Government Area</Label>
             <Select
-              onValueChange={(value) => setValue('lga', value)}
-              value={watch('lga')}
-              disabled={loading || !watch('state')}
+              onValueChange={(value) => setValue("lga", value)}
+              value={watch("lga")}
+              disabled={loading || !watch("state")}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Local Government Area" />
@@ -289,19 +386,25 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>LGAs</SelectLabel>
-                  {watch('state') ? (
-                    states.find((state) => state.name === watch('state'))?.lgas.map((lga) => (
-                      <SelectItem key={lga} value={lga}>
-                        {lga}
-                      </SelectItem>
-                    ))
+                  {watch("state") ? (
+                    states
+                      .find((state) => state.name === watch("state"))
+                      ?.lgas.map((lga) => (
+                        <SelectItem key={lga} value={lga}>
+                          {lga}
+                        </SelectItem>
+                      ))
                   ) : (
-                    <div className="p-2 text-sm text-gray-500">Select a state first</div>
+                    <div className="p-2 text-sm text-gray-500">
+                      Select a state first
+                    </div>
                   )}
                 </SelectGroup>
               </SelectContent>
             </Select>
-            {errors.lga && <p className="text-red-500 text-xs mt-1">{errors.lga.message}</p>}
+            {errors.lga && (
+              <p className="text-red-500 text-xs mt-1">{errors.lga.message}</p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -310,10 +413,14 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
               id="address"
               placeholder="Street Address"
               className="shadow-none"
-              {...register('streetAddress')}
+              {...register("streetAddress")}
               disabled={loading}
             />
-            {errors.streetAddress && <p className="text-red-500 text-xs mt-1">{errors.streetAddress.message}</p>}
+            {errors.streetAddress && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.streetAddress.message}
+              </p>
+            )}
           </div>
 
           <Button type="submit" disabled={loading}>
@@ -323,7 +430,7 @@ export default function AddProspectModal({ open, onOpenChange, user }: UserModal
                 Saving...
               </>
             ) : (
-              'Save Changes'
+              "Save Changes"
             )}
           </Button>
         </form>

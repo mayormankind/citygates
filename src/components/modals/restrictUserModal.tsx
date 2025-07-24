@@ -1,23 +1,41 @@
-import React from 'react';
-import { Button } from '../ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Loader2 } from 'lucide-react';
-import { User } from '@/lib/types';
+import React from "react";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Loader2 } from "lucide-react";
+import { User } from "@/lib/types";
 
 interface RestrictUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User;
-  onActivate: (userId: string, newStatus: "active" | "restricted") => Promise<void>;
+  onActivate: (
+    userId: string,
+    user: User,
+    newStatus: "active" | "restricted"
+  ) => Promise<void>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
 }
 
-export default function RestrictUserModal({ open, onOpenChange, user, onActivate, loading, setLoading }: RestrictUserModalProps) {
+export default function RestrictUserModal({
+  open,
+  onOpenChange,
+  user,
+  onActivate,
+  loading,
+  setLoading,
+}: RestrictUserModalProps) {
   const handleConfirmRestrict = async () => {
     setLoading(true);
     try {
-      await onActivate(user.id, "restricted");
+      await onActivate(user.id, user, "restricted");
     } catch (error) {
       console.error("Restriction error:", error);
     } finally {
@@ -31,11 +49,16 @@ export default function RestrictUserModal({ open, onOpenChange, user, onActivate
         <DialogHeader>
           <DialogTitle>Restrict User</DialogTitle>
           <DialogDescription>
-            Are you sure you want to restrict {user.name}? This action cannot be undone.
+            Are you sure you want to restrict {user.name}? This action cannot be
+            undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancel
           </Button>
           <Button
