@@ -18,6 +18,13 @@ import { toast } from "sonner";
 import * as z from "zod";
 import { useUser } from "@/context/UserContext";
 
+// Extend the Window interface to include confirmationResult
+declare global {
+  interface Window {
+    confirmationResult?: any;
+  }
+}
+
 const otpSchema = z.object({
   otp: z.string().regex(/^\d{6}$/, "OTP must be 6 digits"),
 });
