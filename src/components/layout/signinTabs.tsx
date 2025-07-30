@@ -81,10 +81,10 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
       });
       setUserData({ email: "", password: "", phone: "" });
     } catch (err: any) {
-      toast.error(
-        "Admin sign-in failed.",
-        err.message || "Please check your credentials and try again."
-      );
+      toast.error("Admin sign-in failed.", {
+        description:
+          err.message || "Please check your credentials and try again.",
+      });
       setError("Login failed. Check your credentials.");
     } finally {
       setIsLoading(false);
