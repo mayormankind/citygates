@@ -8,11 +8,17 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  serverTimestamp,
+  onSnapshot,
+  collection,
+} from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Checkbox } from "../ui/checkbox";
 import { toast } from "sonner";
-import { Role } from "@/lib/types";
+import { Branch, Role } from "@/lib/types";
 
 // Define permissions grouped by categories
 const permissionCategories = {
@@ -71,7 +77,26 @@ export default function EditRoleModal({
   const [roleType, setRoleType] = useState<"General" | "Branch" | "Assigned">(
     "General"
   );
+  const [branchId, setBranchId] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribeBranches = onSnapshot(
+      collection(db, "branches"),
+      (snapshot) => {
+        const branchesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+        })) as Branch[];
+        setBranches(branchesData);
+        setLoading(false);
+      }
+    );
+    return () => unsubscribeBranches();
+  }, []);
 
   // Load existing role data when the modal opens
   useEffect(() => {
@@ -97,6 +122,7 @@ export default function EditRoleModal({
       await updateDoc(roleRef, {
         name: roleName,
         permissions: selectedPermissions,
+        branchId: roleType === "Branch" ? branchId : null,
         updatedAt: serverTimestamp(),
       });
       toast.success("Role updated successfully!");
