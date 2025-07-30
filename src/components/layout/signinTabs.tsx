@@ -83,7 +83,9 @@ export default function SigninTabs({ initialTab = "signin-as-customer" }) {
     } catch (err: any) {
       toast.error("Admin sign-in failed.", {
         description:
-          err.message || "Please check your credentials and try again.",
+          err.message == "Firebase: Error (auth/invalid-credential)."
+            ? "Please check your credentials and try again."
+            : err.message,
       });
       setError("Login failed. Check your credentials.");
     } finally {
