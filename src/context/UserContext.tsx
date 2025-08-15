@@ -11,7 +11,7 @@ import { User } from "@/lib/types";
 interface UserContextType {
   user: User | null;
   loading: boolean;
-  setUserManually: (userData: Partial<User>) => void;
+  setUserManually: (userData: Partial<User> | null) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -20,10 +20,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const setUserManually = (userData: Partial<User>) => {
-    setUser(
-      (prev) => ({ ...prev, ...userData, createdAt: new Date() }) as User | null
-    );
+  const setUserManually = (userData: Partial<User> | null) => {
+    if (userData === null) {
+      setUser(null);
+    } else {
+      setUser(
+        (prev) =>
+          ({ ...prev, ...userData, createdAt: new Date() }) as User | null
+      );
+    }
   };
 
   useEffect(() => {
@@ -79,7 +84,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 export const useUser = () => {
   const context = useContext(UserContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useUser must be used within a UserProvider");
   }
   return context;

@@ -97,3 +97,21 @@ export const navigation = [
     requiredPermission: "View Broadcasts" as Permission,
   },
 ];
+
+export const customerNavigation = [
+  {
+    name: "Transactions",
+    href: "/dashboard/customer/transactions",
+    icon: CircleDollarSign,
+  },
+  {
+    name: "Registered Plans",
+    href: "/dashboard/customer/plans",
+    icon: PackageOpen,
+  },
+  {
+    name: "Profile",
+    href: "/dashboard/customer/profile",
+    icon: Users,
+  },
+];
