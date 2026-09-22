@@ -1,4 +1,4 @@
-// lib/auth.ts
+// lib/auth.ts file
 import { useAuth } from "@/context/AdminContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
